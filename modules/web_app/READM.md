@@ -19,7 +19,7 @@
 The `<type>` and `<summary>` fields are mandatory, the `(<scope>)` field is optional.
 
 #### <a name="commit-header"></a>Commit Message Example
-- `feat(similarityReports): get similarity reports and display in a grid.`
-- `update(similarityReports): add updatedDate col in the report grid.`
-- `fix(similarityReports): display correct message error.`
-- `update(global): change css system.`
+- `feat(similarityReports): get similarity reports and display in a grid`
+- `update(similarityReports): add updatedDate col in the report grid`
+- `fix(similarityReports): display correct message error`
+- `update(global): change css system`
