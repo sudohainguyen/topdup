@@ -9,16 +9,11 @@ import NavigationBar from "../../shared/components/navigation-bar/navigation-bar
 
 function App() {
 	const { token, setToken } = useToken();
-	const [isLogin, setIsLogin] = React.useState(true);
-
-	React.useEffect(() => {
-		token ? setIsLogin(true) : setIsLogin(false);
-	}, [token]);
 
 	return (
 		<BrowserRouter>
 			<div className="App">
-				<NavigationBar isLogin={isLogin} />
+				<NavigationBar isLoggedIn={token ? true : false} />
 
 				<div className="auth-wrapper">
 					<div className="auth-inner">
