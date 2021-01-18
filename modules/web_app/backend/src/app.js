@@ -1,6 +1,6 @@
 import express from "express";
 import routes from "./routes";
-import logger from "morgan"
+import logger from "morgan";
 const cors = require("cors");
 import { Server } from 'http';
 import bodyParser from "body-parser";
@@ -80,5 +80,6 @@ process.on('unhandledRejection', error => {
   console.log('unhandledRejection', error);
 });
 server.listen(port);
+
 
 export default app;
