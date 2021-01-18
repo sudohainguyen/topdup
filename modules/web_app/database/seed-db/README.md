@@ -1,4 +1,4 @@
-You can run postgres docker container by running this command: 
+You can run postgres docker container by running this command:
 `sudo docker run -d -p 5432:5432 --name db --restart always -e POSTGRES_USER=admin -e POSTGRES_PASSWORD=admin -e POSTGRES_DB=topdup_db -d postgres`
 
 To init database, you can run: `npm run init-database`
