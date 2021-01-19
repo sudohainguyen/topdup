@@ -1,29 +1,29 @@
-# Giới thiệu về TopDup 
-TopDup là dự án cộng đồng được khởi xướng bởi [Forum Machine Learning Cơ bản](https://www.facebook.com/groups/machinelearningcoban) nhằm hỗ trợ các website, blog công nghệ bảo vệ bản quyền bài viết và chống sao chép.
+# Introduce about TopDup 
+TopDup is a project that start from a forum [Forum Machine Learning Cơ bản](https://www.facebook.com/groups/machinelearningcoban) nhằm which aiming to help the website, blogger from prevent copyright problem.
 
-Ý tưởng cơ bản cuả dự án là quét toàn bộ tin tức từ các website, blog công nghệ phổ biến tại Việt Nam, sử dụng NLP để xác định những bài viết giống nhau. Qua đó giúp chủ bài viết dễ dàng phát hiện nếu bài viết cuả mình bị sao chép trái phép. 
+The idea is to crawling all of the blog from more than 1000 website everyday and using NLP techniques to calculate the similarity score between the original one with the rest to figure out which one is copying the original blog . 
 
-Dự án là một nỗ lực nhằm chống lại tình trạng vi phạm bản quyền bài viết phổ biến trong giới công nghệ Việt Nam. Xem thêm [Vụ việc Topdev sao chép nhiều bài viết từ Viblo mà không xin phép](https://www.facebook.com/groups/machinelearningcoban/permalink/1036374896819917)  
+This project is an effort in preventing stealing other people work that happen recently in Vietnam. For more information please read [Topdev copy Viblo work without permission](https://www.facebook.com/groups/machinelearningcoban/permalink/1036374896819917)   
 
-# Tiến độ và kết quả dự án   
-Tính đến ngày 26/9/2020, dự án đã cơ bản hoàn thành bộ quét bài viết từ các trang công nghệ phổ biến tại Việt Nam trên cơ sở bộ quét [Đọc báo](https://github.com/hailoc12/docbao). Model phát hiện bài viết trùng lặp và frontend hiển thị dữ liệu cơ bản cũng đã được hoàn tất. 
-
-Để đóng góp cho dự án, mời bạn tham khảo [CONTRIBUTING.md](../docs/CONTRIBUTING.md)  
-
-# Cấu trúc dự án hiện tại 
-Hiện tại TopDup được chia thành 5 modules chính để các team có thể phân chia phát triển song song với nhau 
+# Project structure
+TopDup split into 5 main group so that everyone can work and contribute in. This included:
+1. Crawl Data
+2. Data wrangling
+3. NLP Model
+4. API Connection
+5. Web
 
 ![High Level Architecture](docs/topdup_highlevel.png)
 
 # Cấu trúc thư mục 
 ~~~
-/modules: chứa toàn bộ mã nguồn cuả dự án, được chia theo từng modules
-    /crawlers: mã nguồn quét dữ liệu 
-    /data_wranglers: mã nguồn xử lí và làm sạch dữ liệu 
-    /ml: mã nguồn cho machine learning / AI 
-    /ml_api: mã nguồn cho public contract của ML/AI
-    /web_app: mã nguồn cho website TopDup
-    /legacies: mã nguồn cho TopDup phiên bản cũ (sau này sẽ xoá khi phiên bản TopDup mới được release)
-        /topdup_open: mã nguồn lọc bài viết trùng và frontend 
-        /docbao: max nguồn quét dữ liệu
+/modules: contains all the source code of project. Split base on team
+    /crawlers: Scan and craw information 
+    /data_wranglers: Preprocessing and Cleaning 
+    /ml: Source code for AI/ML 
+    /ml_api: API Connection
+    /web_app: Front + Back end
+    /legacies: TopDup old version
+        /topdup_open: Source code on scanning and front end 
+        /docbao: Scan using DocBao API
 ~~~
