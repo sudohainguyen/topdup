@@ -15,7 +15,7 @@ TopDup split into 5 main group so that everyone can work and contribute in. This
 
 ![High Level Architecture](docs/topdup_highlevel.png)
 
-# Cấu trúc thư mục 
+# Folder Structure 
 ~~~
 /modules: contains all the source code of project. Split base on team
     /crawlers: Scan and craw information 
