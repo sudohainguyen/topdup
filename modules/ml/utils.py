@@ -1,11 +1,14 @@
 import json
-from collections import defaultdict
 import logging
 import pprint
-import pandas as pd
-from typing import Dict, Any, List
-from modules.ml.document_store.sql import DocumentORM
+import random
+import string
+from collections import defaultdict
+from typing import Any, Dict, List
 
+import pandas as pd
+
+from modules.ml.document_store.sql import DocumentORM
 
 logger = logging.getLogger(__name__)
 
@@ -113,3 +116,12 @@ def convert_labels_to_squad(labels_file: str):
 
     with open("labels_in_squad_format.json", "w+") as outfile:
         json.dump(labels_in_squad_format, outfile)
+
+
+def random_string(length: int = 10) -> str:
+    """
+    return a random string of lowercase letters and digits with a given length
+    """
+    return "".join(
+        [random.choice(string.ascii_letters + string.digits) for n in range(length)]
+    )
