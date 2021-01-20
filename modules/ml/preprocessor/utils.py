@@ -32,7 +32,7 @@ def eval_data_from_json(filename: str, max_docs: Union[int, bool] = None) -> Tup
     """
 
     docs: List[Document] = []
-    labels = []
+    labels: List[Label] = []
 
     with open(filename, "r") as file:
         data = json.load(file)
@@ -67,7 +67,7 @@ def eval_data_from_jsonl(filename: str, batch_size: Optional[int] = None,
     """
 
     docs: List[Document] = []
-    labels = []
+    labels: List[Label] = []
 
     with open(filename, "r") as file:
         for document in file:

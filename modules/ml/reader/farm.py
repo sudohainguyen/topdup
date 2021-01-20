@@ -444,7 +444,7 @@ class FARMReader(BaseReader):
         labels = document_store.get_all_labels(index=label_index, filters=filters)
 
         # Aggregate all answer labels per question
-        aggregated_per_doc = defaultdict(list)
+        aggregated_per_doc: Dict = defaultdict(list)
         for label in labels:
             if not label.document_id:
                 logger.error(f"Label does not contain a document_id")
@@ -530,7 +530,7 @@ class FARMReader(BaseReader):
         # Assemble answers from all the different documents and format them.
         # For the 'no answer' option, we collect all no_ans_gaps and decide how likely
         # a no answer is based on all no_ans_gaps values across all documents
-        answers = []
+        answers: List[QAPred] = []
         no_ans_gaps = []
         best_score_answer = 0
 

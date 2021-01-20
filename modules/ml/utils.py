@@ -72,7 +72,7 @@ def convert_labels_to_squad(labels_file: str):
     with open(labels_file) as label_file:
         labels = json.load(label_file)
 
-    labels_grouped_by_documents = defaultdict(list)
+    labels_grouped_by_documents: Dict = defaultdict(list)
     for label in labels:
         labels_grouped_by_documents[label["document_id"]].append(label)
 
