@@ -3,7 +3,7 @@ import subprocess
 from pathlib import Path
 from typing import List, Optional, Dict, Any
 
-from haystack.file_converter.base import BaseConverter
+from modules.ml.file_converter.base import BaseConverter
 
 logger = logging.getLogger(__name__)
 

@@ -6,10 +6,10 @@ import networkx as nx
 from networkx import DiGraph
 from networkx.drawing.nx_agraph import to_agraph
 
-from haystack.generator.base import BaseGenerator
-from haystack.reader.base import BaseReader
-from haystack.retriever.base import BaseRetriever
-from haystack.summarizer.base import BaseSummarizer
+from modules.ml.generator.base import BaseGenerator
+from modules.ml.reader.base import BaseReader
+from modules.ml.retriever.base import BaseRetriever
+from modules.ml.summarizer.base import BaseSummarizer
 
 
 class Pipeline:

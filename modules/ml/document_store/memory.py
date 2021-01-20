@@ -3,9 +3,9 @@ from typing import Dict, List, Optional, Union
 from uuid import uuid4
 from collections import defaultdict
 
-from haystack.document_store.base import BaseDocumentStore
-from haystack import Document, Label
-from haystack.retriever.base import BaseRetriever
+from modules.ml.document_store.base import BaseDocumentStore
+from modules.ml import Document, Label
+from modules.ml.retriever.base import BaseRetriever
 
 from scipy.spatial.distance import cosine
 

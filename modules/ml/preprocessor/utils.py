@@ -10,12 +10,12 @@ import json
 
 from farm.data_handler.utils import http_get
 
-from haystack.file_converter.base import BaseConverter
-from haystack.file_converter.docx import DocxToTextConverter
-from haystack.file_converter.pdf import PDFToTextConverter
-from haystack.file_converter.tika import TikaConverter
-from haystack import Document, Label
-from haystack.file_converter.txt import TextConverter
+from modules.ml.file_converter.base import BaseConverter
+from modules.ml.file_converter.docx import DocxToTextConverter
+from modules.ml.file_converter.pdf import PDFToTextConverter
+from modules.ml.file_converter.tika import TikaConverter
+from modules.ml import Document, Label
+from modules.ml.file_converter.txt import TextConverter
 
 logger = logging.getLogger(__name__)
 
@@ -163,7 +163,7 @@ def convert_files_to_dicts(dir_path: str, clean_func: Optional[Callable] = None,
             suffix2paths[file_suffix].append(path)
         elif not path.is_dir():
             logger.warning('Skipped file {0} as type {1} is not supported here. '
-                           'See haystack.file_converter for support of more file types'.format(path, file_suffix))
+                           'See modules.ml.file_converter for support of more file types'.format(path, file_suffix))
 
     # No need to initialize converter if file type not present
     for file_suffix in suffix2paths.keys():
@@ -225,7 +225,7 @@ def tika_convert_files_to_dicts(
             file_paths.append(path)
         elif not path.is_dir():
             logger.warning('Skipped file {0} as type {1} is not supported here. '
-                           'See haystack.file_converter for support of more file types'.format(path, file_suffix))
+                           'See modules.ml.file_converter for support of more file types'.format(path, file_suffix))
 
     documents = []
     for path in file_paths:

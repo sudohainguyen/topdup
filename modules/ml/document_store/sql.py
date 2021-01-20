@@ -8,8 +8,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.sql import case
 
-from haystack.document_store.base import BaseDocumentStore
-from haystack import Document, Label
+from modules.ml.document_store.base import BaseDocumentStore
+from modules.ml import Document, Label
 
 logger = logging.getLogger(__name__)
 

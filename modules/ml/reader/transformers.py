@@ -2,8 +2,8 @@ from typing import List, Optional
 
 from transformers import pipeline
 
-from haystack import Document
-from haystack.reader.base import BaseReader
+from modules.ml import Document
+from modules.ml.reader.base import BaseReader
 
 
 class TransformersReader(BaseReader):

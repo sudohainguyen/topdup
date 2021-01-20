@@ -4,7 +4,7 @@ from typing import Dict, Optional, Any
 
 import docx
 
-from haystack.file_converter.base import BaseConverter
+from modules.ml.file_converter.base import BaseConverter
 
 logger = logging.getLogger(__name__)
 

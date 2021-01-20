@@ -3,8 +3,8 @@ from typing import Any, Dict, List, Optional
 
 from transformers import pipeline
 
-from haystack import Document
-from haystack.summarizer.base import BaseSummarizer
+from modules.ml import Document
+from modules.ml.summarizer.base import BaseSummarizer
 
 logger = logging.getLogger(__name__)
 

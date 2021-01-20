@@ -1,8 +1,8 @@
 import logging
 from abc import abstractmethod, ABC
 from typing import Any, Optional, Dict, List, Union
-from haystack import Document, Label, MultiLabel
-from haystack.preprocessor.utils import eval_data_from_json, eval_data_from_jsonl, squad_json_to_jsonl
+from modules.ml import Document, Label, MultiLabel
+from modules.ml.preprocessor.utils import eval_data_from_json, eval_data_from_jsonl, squad_json_to_jsonl
 
 
 logger = logging.getLogger(__name__)

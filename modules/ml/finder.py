@@ -5,10 +5,10 @@ from statistics import mean
 from typing import Optional, Dict, Any, List
 from collections import defaultdict
 
-from haystack.reader.base import BaseReader
-from haystack.retriever.base import BaseRetriever
-from haystack import MultiLabel
-from haystack.eval import calculate_average_precision_and_reciprocal_rank, eval_counts_reader_batch, \
+from modules.ml.reader.base import BaseReader
+from modules.ml.retriever.base import BaseRetriever
+from modules.ml import MultiLabel
+from modules.ml.eval import calculate_average_precision_and_reciprocal_rank, eval_counts_reader_batch, \
     calculate_reader_metrics, eval_counts_reader
 
 logger = logging.getLogger(__name__)

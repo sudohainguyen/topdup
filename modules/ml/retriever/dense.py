@@ -5,11 +5,11 @@ import numpy as np
 from pathlib import Path
 from tqdm import tqdm
 
-from haystack.document_store.base import BaseDocumentStore
-from haystack.document_store.elasticsearch import ElasticsearchDocumentStore
-from haystack.document_store.memory import InMemoryDocumentStore
-from haystack import Document
-from haystack.retriever.base import BaseRetriever
+from modules.ml.document_store.base import BaseDocumentStore
+from modules.ml.document_store.elasticsearch import ElasticsearchDocumentStore
+from modules.ml.document_store.memory import InMemoryDocumentStore
+from modules.ml import Document
+from modules.ml.retriever.base import BaseRetriever
 
 from farm.infer import Inferencer
 from farm.modeling.tokenization import Tokenizer
@@ -220,7 +220,7 @@ class DensePassageRetriever(BaseRetriever):
         """
         Create embeddings for a list of passages using the passage encoder
 
-        :param docs: List of Document objects used to represent documents / passages in a standardized way within Haystack.
+        :param docs: List of Document objects used to represent documents / passages in a standardized way within modules.ml.
         :return: Embeddings of documents / passages shape (batch_size, embedding_dim)
         """
         passages = [{'passages': [{

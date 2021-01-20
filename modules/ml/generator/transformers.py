@@ -6,9 +6,9 @@ import numpy
 import torch
 from transformers import RagTokenizer, RagTokenForGeneration
 
-from haystack import Document
-from haystack.generator.base import BaseGenerator
-from haystack.retriever.dense import DensePassageRetriever
+from modules.ml import Document
+from modules.ml.generator.base import BaseGenerator
+from modules.ml.retriever.dense import DensePassageRetriever
 
 logger = logging.getLogger(__name__)
 

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional, Dict
 
-from haystack import Document
+from modules.ml import Document
 
 
 class BaseSummarizer(ABC):

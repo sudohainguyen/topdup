@@ -6,7 +6,7 @@ from typing import List, Optional, Dict, Any
 import requests
 from tika import parser as tikaparser
 
-from haystack.file_converter.base import BaseConverter
+from modules.ml.file_converter.base import BaseConverter
 
 logger = logging.getLogger(__name__)
 

@@ -8,7 +8,7 @@ from typing import List, Optional, Generator, Set
 import nltk
 from more_itertools import windowed
 
-from haystack.preprocessor.base import BasePreProcessor
+from modules.ml.preprocessor.base import BasePreProcessor
 
 logger = logging.getLogger(__name__)
 

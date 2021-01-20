@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 from typing import List, Optional, Sequence
 
-from haystack import Document
+from modules.ml import Document
 
 
 class BaseReader(ABC):

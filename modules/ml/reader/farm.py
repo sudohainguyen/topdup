@@ -20,9 +20,9 @@ from farm.utils import set_all_seeds, initialize_device_settings
 from scipy.special import expit
 import shutil
 
-from haystack import Document
-from haystack.document_store.base import BaseDocumentStore
-from haystack.reader.base import BaseReader
+from modules.ml import Document
+from modules.ml.document_store.base import BaseDocumentStore
+from modules.ml.reader.base import BaseReader
 
 logger = logging.getLogger(__name__)
 
@@ -640,7 +640,7 @@ class FARMReader(BaseReader):
 
         Usage:
 
-            `from haystack.reader.farm import FARMReader
+            `from modules.ml.reader.farm import FARMReader
             from pathlib import Path
             onnx_model_path = Path("roberta-onnx-model")
             FARMReader.convert_to_onnx(model_name="deepset/bert-base-cased-squad2", output_path=onnx_model_path)

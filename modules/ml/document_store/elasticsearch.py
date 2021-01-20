@@ -10,9 +10,9 @@ from elasticsearch.exceptions import RequestError
 import numpy as np
 from scipy.special import expit
 
-from haystack.document_store.base import BaseDocumentStore
-from haystack import Document, Label
-from haystack.retriever.base import BaseRetriever
+from modules.ml.document_store.base import BaseDocumentStore
+from modules.ml import Document, Label
+from modules.ml.retriever.base import BaseRetriever
 
 logger = logging.getLogger(__name__)
 

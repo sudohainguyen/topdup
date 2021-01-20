@@ -5,9 +5,9 @@ from typing import Union, List, Optional, Dict
 from tqdm import tqdm
 import numpy as np
 
-from haystack import Document
-from haystack.document_store.sql import SQLDocumentStore
-from haystack.retriever.base import BaseRetriever
+from modules.ml import Document
+from modules.ml.document_store.sql import SQLDocumentStore
+from modules.ml.retriever.base import BaseRetriever
 
 from scipy.special import expit
 

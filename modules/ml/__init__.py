@@ -1,9 +1,9 @@
 import logging
 
 import pandas as pd
-from haystack.schema import Document, Label, MultiLabel
-from haystack.finder import Finder
-from haystack.pipeline import Pipeline
+from modules.ml.schema import Document, Label, MultiLabel
+from modules.ml.finder import Finder
+from modules.ml.pipeline import Pipeline
 
 pd.options.display.max_colwidth = 80
 

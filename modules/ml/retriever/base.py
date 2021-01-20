@@ -5,8 +5,8 @@ from time import perf_counter
 from functools import wraps
 from tqdm import tqdm
 
-from haystack import Document
-from haystack.document_store.base import BaseDocumentStore
+from modules.ml import Document
+from modules.ml.document_store.base import BaseDocumentStore
 
 logger = logging.getLogger(__name__)
 

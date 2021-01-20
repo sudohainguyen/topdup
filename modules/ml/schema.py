@@ -13,7 +13,7 @@ class Document:
                  meta: Dict[str, Any] = None,
                  embedding: Optional[np.array] = None):
         """
-        Object used to represent documents / passages in a standardized way within Haystack.
+        Object used to represent documents / passages in a standardized way within modules.ml.
         For example, this is what the retriever will return from the DocumentStore,
         regardless if it's ElasticsearchDocumentStore or InMemoryDocumentStore.
 
@@ -89,7 +89,7 @@ class Label:
                  no_answer: Optional[bool] = None,
                  model_id: Optional[int] = None):
         """
-        Object used to represent label/feedback in a standardized way within Haystack.
+        Object used to represent label/feedback in a standardized way within modules.ml.
         This includes labels from dataset like SQuAD, annotations from labeling tools,
         or, user-feedback from the Haystack REST API.
 
