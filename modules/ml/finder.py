@@ -6,7 +6,7 @@ from typing import Optional, Dict, Any, List
 from collections import defaultdict
 
 from modules.ml.reader.base import BaseReader
-from modules.ml.retriever.base import BaseRetriever
+# from modules.ml.retriever.base import BaseRetriever
 from modules.ml import MultiLabel
 from modules.ml.eval import calculate_average_precision_and_reciprocal_rank, eval_counts_reader_batch, \
     calculate_reader_metrics, eval_counts_reader
@@ -21,7 +21,7 @@ class Finder:
     It provides an interface to predict top n answers for a given question.
     """
 
-    def __init__(self, reader: Optional[BaseReader], retriever: Optional[BaseRetriever]):
+    def __init__(self, reader: Optional[BaseReader], retriever):
         """
         Initialize a Finder instance.
 

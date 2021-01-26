@@ -8,7 +8,7 @@ from networkx.drawing.nx_agraph import to_agraph
 
 from modules.ml.generator.base import BaseGenerator
 from modules.ml.reader.base import BaseReader
-from modules.ml.retriever.base import BaseRetriever
+# from modules.ml.retriever.base import BaseRetriever
 from modules.ml.summarizer.base import BaseSummarizer
 
 
@@ -186,7 +186,7 @@ class BaseStandardPipeline:
 
 
 class ExtractiveQAPipeline(BaseStandardPipeline):
-    def __init__(self, reader: BaseReader, retriever: BaseRetriever):
+    def __init__(self, reader: BaseReader, retriever):
         """
         Initialize a Pipeline for Extractive Question Answering.
 
@@ -205,7 +205,7 @@ class ExtractiveQAPipeline(BaseStandardPipeline):
 
 
 class DocumentSearchPipeline(BaseStandardPipeline):
-    def __init__(self, retriever: BaseRetriever):
+    def __init__(self, retriever):
         """
         Initialize a Pipeline for semantic document search.
 
@@ -222,7 +222,7 @@ class DocumentSearchPipeline(BaseStandardPipeline):
 
 
 class GenerativeQAPipeline(BaseStandardPipeline):
-    def __init__(self, generator: BaseGenerator, retriever: BaseRetriever):
+    def __init__(self, generator: BaseGenerator, retriever):
         """
         Initialize a Pipeline for Generative Question Answering.
 
@@ -241,7 +241,7 @@ class GenerativeQAPipeline(BaseStandardPipeline):
 
 
 class SearchSummarizationPipeline(BaseStandardPipeline):
-    def __init__(self, summarizer: BaseSummarizer, retriever: BaseRetriever):
+    def __init__(self, summarizer: BaseSummarizer, retriever):
         """
         Initialize a Pipeline that retrieves documents for a query and then summarizes those documents.
 
@@ -297,7 +297,7 @@ class SearchSummarizationPipeline(BaseStandardPipeline):
 
 
 class FAQPipeline(BaseStandardPipeline):
-    def __init__(self, retriever: BaseRetriever):
+    def __init__(self, retriever):
         """
         Initialize a Pipeline for finding similar FAQs using semantic document search.
 
