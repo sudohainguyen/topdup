@@ -7,5 +7,13 @@ class Second_Layer_Retriever(First_Layer_Retriever):
         super().__init__()
         pass
     
+    def _get_all_paragraphs(self) -> List[Paragraph]:
+        pass
+
+    def cal_score(self) -> dict:
+        pass
+
+    def 
+
     def retrieve(self):
         pass

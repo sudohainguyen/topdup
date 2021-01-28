@@ -33,7 +33,7 @@ class FAISSDocumentStore(SQLDocumentStore):
 
     def __init__(
         self,
-        sql_url: str = "sqlite:///",
+        sql_url: str = "postgresql+psycopg2://",
         index_buffer_size: int = 10_000,
         vector_dim: int = 768,
         faiss_index_factory_str: str = "Flat",
@@ -45,7 +45,7 @@ class FAISSDocumentStore(SQLDocumentStore):
         **kwargs,
     ):
         """
-        :param sql_url: SQL connection URL for database. It defaults to local file based SQLite DB. For large scale
+        :param sql_url: SQL connection URL for database. It defaults to local file based SQLite DB (Change to PostgredSQL). For large scale
                         deployment, Postgres is recommended.
         :param index_buffer_size: When working with large datasets, the ingestion process(FAISS + SQL) can be buffered in
                                   smaller chunks to reduce memory footprint.

@@ -1,16 +1,19 @@
 import numpy as np
+import logging
 
 
 from modules.ml.retriever.indexer.faiss import FaissIndexer
 from modules.ml.retriever.vectorizer.tf_idf import TfidfDocVectorizer
-from modules.ml.document_store.base import BaseDocumentStore
+from modules.ml.document_store.faiss import FAISSDocumentStore
 
+
+logger = logging.getLogger(__name__)
 
 class First_Layer_Retriever:
 
-    def __init__(self, documents: BaseDocumentStore, vectorizer_type: str = "tfidf", indexer_type: str = "faiss", vector_dim: int = 128, is_training: Optional[bool] = True):
+    def __init__(self, documents: FAISSDocumentStore, vectorizer_type: str = "tfidf", indexer_type: str = "faiss", vector_dim: int = 128, is_training: Optional[bool] = True):
         """
-        :param documents: an instance of a DocumentStore (HAVE NOT LINK YET) to retrieve document from.
+        :param documents: an instance of a DocumentStore (FAISSDocumentStore) to retrieve document from.
         :param vectorizer_type: Type of modules use for embedding and compute matrix (TFIDF AS DEFAULT).
         :param indexer_type: Name of the index in the DocumentStore from which to retrieve documents.
         :param vector_dim: Dimension for the vector that uses in First Layer.
@@ -24,7 +27,7 @@ class First_Layer_Retriever:
         
         """
 
-        self.documents = documents
+        self.documents = FAISSDocumentStore(sql_url="postgresql+psycopg2://postgres:password@host:5432/postgres")
 
         if vectorizer_type == "tfidf":
             self.vectorizer = TfidfDocVectorizer(documents=self.documents,
