@@ -171,4 +171,6 @@ def _clean_vncore_result(text: str) -> str:
         Example: "cho đến thời_điểm này , có_thể nói ,"
     """
     text = re.sub(r'\s([?.!,](?:\s|$))', r'\1', text)
+    text = re.sub(r'\(\s', '(', text)
+    text = re.sub(r'\s\)', ')', text)
     return text
