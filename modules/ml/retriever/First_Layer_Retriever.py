@@ -11,7 +11,12 @@ logger = logging.getLogger(__name__)
 
 class First_Layer_Retriever:
 
-    def __init__(self, documents: FAISSDocumentStore, vectorizer_type: str = "tfidf", indexer_type: str = "faiss", vector_dim: int = 128, is_training: Optional[bool] = True):
+    def __init__(self, 
+                 documents: FAISSDocumentStore(sql_url="postgresql+psycopg2://postgres:password@host:5432/postgres"), 
+                 vectorizer_type: str = "tfidf", 
+                 indexer_type: str = "faiss", 
+                 vector_dim: int = 128, 
+                 is_training: Optional[bool] = True):
         """
         :param documents: an instance of a DocumentStore (FAISSDocumentStore) to retrieve document from.
         :param vectorizer_type: Type of modules use for embedding and compute matrix (TFIDF AS DEFAULT).
@@ -27,7 +32,7 @@ class First_Layer_Retriever:
         
         """
 
-        self.documents = FAISSDocumentStore(sql_url="postgresql+psycopg2://postgres:password@host:5432/postgres")
+        self.documents = documents
 
         if vectorizer_type == "tfidf":
             self.vectorizer = TfidfDocVectorizer(documents=self.documents,

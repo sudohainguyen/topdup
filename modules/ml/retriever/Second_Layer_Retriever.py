@@ -13,7 +13,7 @@ class Second_Layer_Retriever(First_Layer_Retriever):
     def cal_score(self) -> dict:
         pass
 
-    def 
+    def
 
     def retrieve(self):
         pass
