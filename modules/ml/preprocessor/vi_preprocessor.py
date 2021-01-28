@@ -57,7 +57,7 @@ class ViPreProcessor(BasePreProcessor):
             return [document]
 
         if not self.split_length:
-            raise Exception("split_length needs be set when using split_by.")
+            raise ValueError("split_length needs be set when using split_by.")
 
         if self.split_respect_sentence_boundary \
                 and self.split_by not in("word", "sentence"):
@@ -75,10 +75,12 @@ class ViPreProcessor(BasePreProcessor):
             for sen in sentences:
                 current_word_count = len(sen.split(" "))
                 if current_word_count > self.split_length:
-                    logger.warning(f"A sentence found with word count higher than the split length.")
+                    logger.warning(
+                        "A sentence found with word count higher than the split length."
+                    )
                 if word_count + current_word_count > self.split_length:
                     list_splits.append(current_slice)
-                    #Enable split_stride with split_by='word' while respecting sentence boundaries.
+
                     if self.split_overlap:
                         overlap = []
                         w_count = 0
