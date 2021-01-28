@@ -69,7 +69,7 @@ class LabelORM(ORMBase):
 class SQLDocumentStore(BaseDocumentStore):
     def __init__(
         self,
-        url: str = "sqlite://",
+        url: str = "postgresql+psycopg2://",
         index: str = "document",
         label_index: str = "label",
         update_existing_documents: bool = False,
