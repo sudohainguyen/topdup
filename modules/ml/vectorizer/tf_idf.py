@@ -43,3 +43,18 @@ class TfidfDocVectorizer(DocVectorizerBase):
         """
         transform_vector = np.array(self.vectorizer.transform(documents).todense())
         return transform_vector
+
+    @classmethod
+    def save(self, model_path):
+        """ Save tf_idf model to the pickle file
+
+        Args:
+            model_path ([str]): [description]
+        """
+
+    @classmethod
+    def load(cls, model_path):
+        """
+        Load tf_idf model from the pickle file
+        """
+        pass

@@ -9,7 +9,7 @@ from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.sql import case
 
 from modules.ml.document_store.base import BaseDocumentStore
-from modules.ml import Document, Label
+from modules.ml.schema import Document, Label
 
 logger = logging.getLogger(__name__)
 
@@ -49,22 +49,6 @@ class MetaORM(ORMBase):
     )
 
     documents = relationship(DocumentORM, backref="Meta")
-
-
-class LabelORM(ORMBase):
-    __tablename__ = "label"
-
-    document_id = Column(String(100), ForeignKey("document.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
-    index = Column(String(100), nullable=False)
-    no_answer = Column(Boolean, nullable=False)
-    origin = Column(String(100), nullable=False)
-    question = Column(Text, nullable=False)
-    is_correct_answer = Column(Boolean, nullable=False)
-    is_correct_document = Column(Boolean, nullable=False)
-    answer = Column(Text, nullable=False)
-    offset_start_in_doc = Column(Integer, nullable=False)
-    model_id = Column(Integer, nullable=True)
-
 
 class SQLDocumentStore(BaseDocumentStore):
     def __init__(
@@ -198,16 +182,6 @@ class SQLDocumentStore(BaseDocumentStore):
 
         return list(documents_map.values())
 
-    def get_all_labels(self, index=None, filters: Optional[dict] = None):
-        """
-        Return all labels in the document store
-        """
-        index = index or self.label_index
-        # TODO: Use batch_size
-        label_rows = self.session.query(LabelORM).filter_by(index=index).all()
-        labels = [self._convert_sql_row_to_label(row) for row in label_rows]
-
-        return labels
 
     def write_documents(self, documents: Union[List[dict], List[Document]], index: Optional[str] = None):
         """
@@ -253,27 +227,6 @@ class SQLDocumentStore(BaseDocumentStore):
                 self.session.rollback()
                 raise ex
 
-    def write_labels(self, labels, index=None):
-        """Write annotation labels into document store."""
-
-        labels = [Label.from_dict(l) if isinstance(l, dict) else l for l in labels]
-        index = index or self.label_index
-        # TODO: Use batch_size
-        for label in labels:
-            label_orm = LabelORM(
-                document_id=label.document_id,
-                no_answer=label.no_answer,
-                origin=label.origin,
-                question=label.question,
-                is_correct_answer=label.is_correct_answer,
-                is_correct_document=label.is_correct_document,
-                answer=label.answer,
-                offset_start_in_doc=label.offset_start_in_doc,
-                model_id=label.model_id,
-                index=index,
-            )
-            self.session.add(label_orm)
-        self.session.commit()
 
     def update_vector_ids(self, vector_id_map: Dict[str, str], index: Optional[str] = None):
         """
@@ -325,12 +278,6 @@ class SQLDocumentStore(BaseDocumentStore):
         count = query.count()
         return count
 
-    def get_label_count(self, index: Optional[str] = None) -> int:
-        """
-        Return the number of labels in the document store
-        """
-        index = index or self.index
-        return self.session.query(LabelORM).filter_by(index=index).count()
 
     def _convert_sql_row_to_document(self, row) -> Document:
         document = Document(

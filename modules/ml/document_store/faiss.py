@@ -5,9 +5,9 @@ from typing import Union, List, Optional, Dict
 from tqdm import tqdm
 import numpy as np
 
-from modules.ml import Document
+from modules.ml.schema import Document
 from modules.ml.document_store.sql import SQLDocumentStore
-from modules.ml.retriever.base import BaseRetriever
+# from modules.ml.retriever.base import BaseRetriever
 
 from scipy.special import expit
 
@@ -37,7 +37,7 @@ class FAISSDocumentStore(SQLDocumentStore):
         index_buffer_size: int = 10_000,
         vector_dim: int = 768,
         faiss_index_factory_str: str = "Flat",
-        faiss_index: Optional[faiss.swigfaiss.Index] = None,
+        faiss_index = None,
         return_embedding: bool = False,
         update_existing_documents: bool = False,
         index: str = "document",
@@ -158,7 +158,7 @@ class FAISSDocumentStore(SQLDocumentStore):
             self.index: "embedding",
         }
 
-    def update_embeddings(self, retriever: BaseRetriever, index: Optional[str] = None):
+    def update_embeddings(self, retriever, index: Optional[str] = None):
         """
         Updates the embeddings in the the document store using the encoding model specified in the retriever.
         This can be useful if want to add or change the embeddings for your documents (e.g. after changing the retriever config).
@@ -318,7 +318,6 @@ class FAISSDocumentStore(SQLDocumentStore):
 
         :param faiss_file_path: Stored FAISS index file. Can be created via calling `save()`
         :param sql_url: Connection string to the SQL database that contains your docs and metadata.
-        :param index_buffer_size: When working with large datasets, the ingestion process(FAISS + SQL) can be buffered in
                                   smaller chunks to reduce memory footprint.
         :return:
         """
