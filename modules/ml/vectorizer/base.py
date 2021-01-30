@@ -14,3 +14,12 @@ class DocVectorizerBase(ABC):
     @abstractmethod
     def transform(self, documents):
         pass
+
+    @abstractmethod
+    def save(self, model_path):
+        pass
+
+    @classmethod
+    @abstractmethod
+    def load(cls, model_path):
+        pass
