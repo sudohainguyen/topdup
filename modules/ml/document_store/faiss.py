@@ -7,7 +7,6 @@ import numpy as np
 
 from modules.ml.schema import Document
 from modules.ml.document_store.sql import SQLDocumentStore
-# from modules.ml.retriever.base import BaseRetriever
 
 from scipy.special import expit
 
@@ -35,7 +34,7 @@ class FAISSDocumentStore(SQLDocumentStore):
         self,
         sql_url: str = "postgresql+psycopg2://",
         index_buffer_size: int = 10_000,
-        vector_dim: int = 768,
+        vector_dim: int = 128,
         faiss_index_factory_str: str = "Flat",
         faiss_index = None,
         return_embedding: bool = False,
@@ -82,6 +81,7 @@ class FAISSDocumentStore(SQLDocumentStore):
             self.faiss_index = faiss_index
         else:
             self.faiss_index = self._create_new_index(vector_dim=self.vector_dim, index_factory=faiss_index_factory_str, **kwargs)
+
             if "ivf" in faiss_index_factory_str.lower():  # enable reconstruction of vectors for inverted index
                 self.faiss_index.set_direct_map_type(faiss.DirectMap.Hashtable)
 
@@ -158,7 +158,7 @@ class FAISSDocumentStore(SQLDocumentStore):
             self.index: "embedding",
         }
 
-    def update_embeddings(self, retriever, index: Optional[str] = None):
+    def update_embeddings(self, vecterizer, index: Optional[str] = None):
         """
         Updates the embeddings in the the document store using the encoding model specified in the retriever.
         This can be useful if want to add or change the embeddings for your documents (e.g. after changing the retriever config).
@@ -172,6 +172,7 @@ class FAISSDocumentStore(SQLDocumentStore):
 
         # Faiss does not support update in existing index data so clear all existing data in it
         self.faiss_index.reset()
+        self.reset_vector_ids(index=index)
 
         index = index or self.index
         documents = self.get_all_documents(index=index)
@@ -181,10 +182,10 @@ class FAISSDocumentStore(SQLDocumentStore):
             return
 
         # To clear out the FAISS index contents and frees all memory immediately that is in use by the index
-        self.faiss_index.reset()
+        # self.faiss_index.reset()
 
         logger.info(f"Updating embeddings for {len(documents)} docs...")
-        embeddings = retriever.embed_passages(documents)  # type: ignore
+        embeddings = vecterizer.transform_document_objects(documents)  # type: ignore
         assert len(documents) == len(embeddings)
         for i, doc in enumerate(documents):
             doc.embedding = embeddings[i]
@@ -198,14 +199,16 @@ class FAISSDocumentStore(SQLDocumentStore):
             self.faiss_index.add(embeddings)
 
             for doc in documents[i: i + self.index_buffer_size]:
+                print(vector_id, "Duc")
                 vector_id_map[doc.id] = vector_id
                 vector_id += 1
             self.update_vector_ids(vector_id_map, index=index)
+            print("update")
+
 
     def get_all_documents(
             self,
             index: Optional[str] = None,
-            filters: Optional[Dict[str, List[str]]] = None,
             return_embedding: Optional[bool] = None
     ) -> List[Document]:
         """
@@ -213,11 +216,9 @@ class FAISSDocumentStore(SQLDocumentStore):
 
         :param index: Name of the index to get the documents from. If None, the
                       DocumentStore's default index (self.index) will be used.
-        :param filters: Optional filters to narrow down the documents to return.
-                        Example: {"name": ["some", "more"], "category": ["only_one"]}
         :param return_embedding: Whether to return the document embeddings.
         """
-        documents = super(FAISSDocumentStore, self).get_all_documents(index=index, filters=filters)
+        documents = super(FAISSDocumentStore, self).get_all_documents(index=index)
         if return_embedding is None:
             return_embedding = self.return_embedding
         if return_embedding:
@@ -253,7 +254,33 @@ class FAISSDocumentStore(SQLDocumentStore):
         self.faiss_index.reset()
         super().delete_all_documents(index=index)
 
-    def query_by_embedding(self,
+    def query_ids_by_embedding(self,
+                           query_emb: np.array,
+                           filters: Optional[dict] = None,
+                           top_k: int = 10,
+                           index: Optional[str] = None,
+                           return_embedding: Optional[bool] = None) -> List[Document]:
+        """
+        Find the document that is most similar to the provided `query_emb` by using a vector similarity metric.
+
+        :param query_emb: Embedding of the query (e.g. gathered from DPR)
+        :param filters: Optional filters to narrow down the search space.
+                        Example: {"name": ["some", "more"], "category": ["only_one"]}
+        :param top_k: How many documents to return
+        :param index: (SQL) index name for storing the docs and metadata
+        :param return_embedding: To return document embedding
+        :return:
+        """
+        if filters:
+            raise Exception("Query filters are not implemented for the FAISSDocumentStore.")
+        if not self.faiss_index:
+            raise Exception("No index exists. Use 'update_embeddings()` to create an index.")
+
+        query_emb = query_emb.astype(np.float32)
+        return self.faiss_index.search(query_emb, top_k)
+
+
+    def query_docs_by_embedding(self,
                            query_emb: np.array,
                            filters: Optional[dict] = None,
                            top_k: int = 10,
@@ -280,7 +307,7 @@ class FAISSDocumentStore(SQLDocumentStore):
         index = index or self.index
 
         query_emb = query_emb.reshape(1, -1).astype(np.float32)
-        score_matrix, vector_id_matrix = self.faiss_index.search(query_emb, top_k)
+        score_matrix, vector_id_matrix = self.query_idxs_by_embedding(query_emb, filters, top_k, index, return_embedding)
         vector_ids_for_query = [str(vector_id) for vector_id in vector_id_matrix[0] if vector_id != -1]
 
         documents = self.get_documents_by_vector_ids(vector_ids_for_query, index=index)
