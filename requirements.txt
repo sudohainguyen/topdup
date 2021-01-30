@@ -1,6 +1,7 @@
 flake8==3.7.9
 mypy==0.761
 qcore==0.5.1
+isort==5.7.0
 
 # haystack requirements
 farm==0.5.0
@@ -28,3 +29,4 @@ httptools
 nltk
 more_itertools
 networkx
+vncorenlp
