@@ -3,17 +3,8 @@ import logging
 from typing import Any, Dict, List, Optional, Union
 from uuid import uuid4
 
-from sqlalchemy import (
-    Boolean,
-    Column,
-    DateTime,
-    ForeignKey,
-    Integer,
-    String,
-    Text,
-    create_engine,
-    func,
-)
+from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Integer, String,
+                        Text, create_engine, func)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.sql import case, null
@@ -252,15 +243,20 @@ class SQLDocumentStore(BaseDocumentStore):
                 # Rollback is important here otherwise self.session will be in inconsistent state and next call will fail
                 self.session.rollback()
                 raise ex
+
     def reset_vector_ids(self, index: Optional[str] = None):
         """
         Set vector IDs for all documents as None
         """
         index = index or self.index
-        self.session.query(DocumentORM).filter_by(index=index).update({DocumentORM.vector_id: null()})
+        self.session.query(DocumentORM).filter_by(index=index).update(
+            {DocumentORM.vector_id: null()}
+        )
         self.session.commit()
 
-    def update_vector_ids(self, vector_id_map: Dict[str, str], index: Optional[str] = None):
+    def update_vector_ids(
+        self, vector_id_map: Dict[str, str], index: Optional[str] = None
+    ):
         """
         Update vector_ids for given document_ids.
 
@@ -326,7 +322,6 @@ class SQLDocumentStore(BaseDocumentStore):
         if row.vector_id:
             document.meta["vector_id"] = row.vector_id
         return document
-
 
     def query_by_embedding(
         self,
