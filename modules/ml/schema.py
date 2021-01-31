@@ -8,8 +8,6 @@ class Document:
     def __init__(self, text: str,
                  id: Optional[str] = None,
                  score: Optional[float] = None,
-                 probability: Optional[float] = None,
-                 question: Optional[str] = None,
                  meta: Dict[str, Any] = None,
                  embedding: Optional[np.array] = None):
         """
@@ -37,8 +35,6 @@ class Document:
             self.id = str(uuid4())
 
         self.score = score
-        self.probability = probability
-        self.question = question
         self.meta = meta or {}
         self.embedding = embedding
 
@@ -53,7 +49,7 @@ class Document:
     @classmethod
     def from_dict(cls, dict, field_map={}):
         _doc = dict.copy()
-        init_args = ["text", "id", "score", "probability", "question", "meta", "embedding"]
+        init_args = ["text", "id", "score", "question", "meta", "embedding"]
         if "meta" not in _doc.keys():
             _doc["meta"] = {}
         # copy additional fields into "meta"
@@ -70,137 +66,6 @@ class Document:
                 _new_doc[k] = v
 
         return cls(**_new_doc)
-
-    def __repr__(self):
-        return str(self.to_dict())
-
-    def __str__(self):
-        return str(self.to_dict())
-
-class Label:
-    def __init__(self, question: str,
-                 answer: str,
-                 is_correct_answer: bool,
-                 is_correct_document: bool,
-                 origin: str,
-                 id: Optional[str] = None,
-                 document_id: Optional[str] = None,
-                 offset_start_in_doc: Optional[int] = None,
-                 no_answer: Optional[bool] = None,
-                 model_id: Optional[int] = None):
-        """
-        Object used to represent label/feedback in a standardized way within modules.ml.
-        This includes labels from dataset like SQuAD, annotations from labeling tools,
-        or, user-feedback from the Haystack REST API.
-
-        :param question: the question(or query) for finding answers.
-        :param answer: the answer string.
-        :param is_correct_answer: whether the sample is positive or negative.
-        :param is_correct_document: in case of negative sample(is_correct_answer is False), there could be two cases;
-                                    incorrect answer but correct document & incorrect document. This flag denotes if
-                                    the returned document was correct.
-        :param origin: the source for the labels. It can be used to later for filtering.
-        :param id: Unique ID used within the DocumentStore. If not supplied, a uuid will be generated automatically.
-        :param document_id: the document_store's ID for the returned answer document.
-        :param offset_start_in_doc: the answer start offset in the document.
-        :param no_answer: whether the question in unanswerable.
-        :param model_id: model_id used for prediction (in-case of user feedback).
-        """
-
-        # Create a unique ID (either new one, or one from user input)
-        if id:
-            self.id = str(id)
-        else:
-            self.id = str(uuid4())
-
-        self.question = question
-        self.answer = answer
-        self.is_correct_answer = is_correct_answer
-        self.is_correct_document = is_correct_document
-        self.origin = origin
-        self.document_id = document_id
-        self.offset_start_in_doc = offset_start_in_doc
-        self.no_answer = no_answer
-        self.model_id = model_id
-
-    @classmethod
-    def from_dict(cls, dict):
-        return cls(**dict)
-
-    def to_dict(self):
-        return self.__dict__
-
-    # define __eq__ and __hash__ functions to deduplicate Label Objects
-    def __eq__(self, other):
-        return (isinstance(other, self.__class__) and
-                getattr(other, 'question', None) == self.question and
-                getattr(other, 'answer', None) == self.answer and
-                getattr(other, 'is_correct_answer', None) == self.is_correct_answer and
-                getattr(other, 'is_correct_document', None) == self.is_correct_document and
-                getattr(other, 'origin', None) == self.origin and
-                getattr(other, 'document_id', None) == self.document_id and
-                getattr(other, 'offset_start_in_doc', None) == self.offset_start_in_doc and
-                getattr(other, 'no_answer', None) == self.no_answer and
-                getattr(other, 'model_id', None) == self.model_id)
-
-    def __hash__(self):
-        return hash(self.question +
-                    self.answer +
-                    str(self.is_correct_answer) +
-                    str(self.is_correct_document) +
-                    str(self.origin) +
-                    str(self.document_id) +
-                    str(self.offset_start_in_doc) +
-                    str(self.no_answer) +
-                    str(self.model_id))
-
-    def __repr__(self):
-        return str(self.to_dict())
-
-    def __str__(self):
-        return str(self.to_dict())
-
-class MultiLabel:
-    def __init__(self, question: str,
-                 multiple_answers: List[str],
-                 is_correct_answer: bool,
-                 is_correct_document: bool,
-                 origin: str,
-                 multiple_document_ids: List[Any],
-                 multiple_offset_start_in_docs: List[Any],
-                 no_answer: Optional[bool] = None,
-                 model_id: Optional[int] = None):
-        """
-        Object used to aggregate multiple possible answers for the same question
-
-        :param question: the question(or query) for finding answers.
-        :param multiple_answers: list of possible answer strings
-        :param is_correct_answer: whether the sample is positive or negative.
-        :param is_correct_document: in case of negative sample(is_correct_answer is False), there could be two cases;
-                                    incorrect answer but correct document & incorrect document. This flag denotes if
-                                    the returned document was correct.
-        :param origin: the source for the labels. It can be used to later for filtering.
-        :param multiple_document_ids: the document_store's IDs for the returned answer documents.
-        :param multiple_offset_start_in_docs: the answer start offsets in the document.
-        :param no_answer: whether the question in unanswerable.
-        :param model_id: model_id used for prediction (in-case of user feedback).
-        """
-        self.question = question
-        self.multiple_answers = multiple_answers
-        self.is_correct_answer = is_correct_answer
-        self.is_correct_document = is_correct_document
-        self.origin = origin
-        self.multiple_document_ids = multiple_document_ids
-        self.multiple_offset_start_in_docs = multiple_offset_start_in_docs
-        self.no_answer = no_answer
-        self.model_id = model_id
-
-    @classmethod
-    def from_dict(cls, dict):
-        return cls(**dict)
-
-    def to_dict(self):
-        return self.__dict__
 
     def __repr__(self):
         return str(self.to_dict())

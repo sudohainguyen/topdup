@@ -16,10 +16,10 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
-from sqlalchemy.sql import case
+from sqlalchemy.sql import case, null
 
 from modules.ml.document_store.base import BaseDocumentStore
-from modules.ml.schema import Document, Label
+from modules.ml.schema import Document
 
 logger = logging.getLogger(__name__)
 
@@ -252,10 +252,15 @@ class SQLDocumentStore(BaseDocumentStore):
                 # Rollback is important here otherwise self.session will be in inconsistent state and next call will fail
                 self.session.rollback()
                 raise ex
+    def reset_vector_ids(self, index: Optional[str] = None):
+        """
+        Set vector IDs for all documents as None
+        """
+        index = index or self.index
+        self.session.query(DocumentORM).filter_by(index=index).update({DocumentORM.vector_id: null()})
+        self.session.commit()
 
-    def update_vector_ids(
-        self, vector_id_map: Dict[str, str], index: Optional[str] = None
-    ):
+    def update_vector_ids(self, vector_id_map: Dict[str, str], index: Optional[str] = None):
         """
         Update vector_ids for given document_ids.
 
@@ -322,19 +327,6 @@ class SQLDocumentStore(BaseDocumentStore):
             document.meta["vector_id"] = row.vector_id
         return document
 
-    def _convert_sql_row_to_label(self, row) -> Label:
-        label = Label(
-            document_id=row.document_id,
-            no_answer=row.no_answer,
-            origin=row.origin,
-            question=row.question,
-            is_correct_answer=row.is_correct_answer,
-            is_correct_document=row.is_correct_document,
-            answer=row.answer,
-            offset_start_in_doc=row.offset_start_in_doc,
-            model_id=row.model_id,
-        )
-        return label
 
     def query_by_embedding(
         self,

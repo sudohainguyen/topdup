@@ -1,63 +1,113 @@
-import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
 
-from modules.ml.retriever.vectorizer.base import DocVectorizerBase
+from ast import dump
+from numpy.lib.function_base import vectorize
+from sklearn.feature_extraction.text import TfidfVectorizer
+import numpy as np
+import pickle
+from modules.ml.vectorizer.base import DocVectorizerBase
 
 
 class TfidfDocVectorizer(DocVectorizerBase):
-    def __init__(
-        self,
-        documents: list = [],
-        vector_dim: int = 128,
-        is_training: bool = True,
-        **kwargs
-    ):
-        """
-        Vectorize the documents and return a vector that has been embedding for indexer or comparison.
 
-        :param documents: A list of document for vectorize.
-        :param vector_dim: Dimension for the vector that uses in First Layer.
-        :param is_training: Whether you want to fit_transform embedding or not.
-        """
-        self.vectorizer = TfidfVectorizer(max_features=vector_dim, **kwargs)
-
-        if is_training:
-            self.embeddings = self.fit_transform(documents)
-
-    def fit(self, train_documents: list) -> List[np.array(train_documents)]:
-        """
-        Fit `train_documents` into the tf-idf and return a list of vector.
-        """
-        train_documents = self.vectorizer.fit(train_documents)
-        return train_documents
-
-    def fit_transform(self, train_documents: list) -> List[np.array(Transform_Vector)]:
-        """
-        Fit and transform `train_documents` into the tf-idf vectorizer and return a list of vector and convert to dense.
-        """
-        transform_vector = np.array(
-            self.vectorizer.fit_transform(train_documents).todense()
-        )
-        return transform_vector
-
-    def transform(self, documents: list) -> List[np.array(Transform_Vector)]:
-        """
-        Transform `documents` into the tf-idf vectorizer and return a list of vector and convert to dense.
-        """
-        transform_vector = np.array(self.vectorizer.transform(documents).todense())
-        return transform_vector
-
-    @classmethod
-    def save(self, model_path):
-        """Save tf_idf model to the pickle file
+    def __init__(self, vector_dim: int = 128, **kwargs):
+        """ Vectorize the documents and return a vector that has been embedding for indexer or comparison.
 
         Args:
-            model_path ([str]): [description]
+            vector_dim (int): Number dimentions of embedding vectors for 1st phase. Defaults to 128.
+            **kwargs: Arbitrary keyword arguments.
         """
+
+        # Init vectorizer
+        self.vectorizer = TfidfVectorizer(max_features = vector_dim, **kwargs)
+        # Set is_trained = True if vectorizer is trained, is_trained = False
+        self.is_trained = False
+
+
+    def fit(self, train_documents: list = None):
+        """ Fit `train_documents` into the tf-idf and return tfidf vectorizer.
+
+        Args:
+            train_documents (list): List of training documents for vectorizer. Defaults to None.
+
+        Returns:
+            Tf idf vectorizer what is trained.
+        """
+
+        vectorizer = self.vectorizer.fit(train_documents)
+        self.is_trained = True
+
+        return vectorizer
+
+
+    def fit_transform(self, train_documents: list = None):
+        """ Learn vocabulary and idf, return embedding matrix of training documents.
+            This is equivalent to fit followed by transform, but more efficiently implemented.
+
+        Args:
+            train_documents (list): List of training documents for vectorizer. Defaults to None.
+
+        Returns:
+            np.array: Embedding matrix of training documents.
+        """
+
+        transform_vector = np.array(
+            self.vectorizer.fit_transform(train_documents).todense())
+        self.is_trained = True
+
+        return transform_vector
+
+
+    def transform(self, documents: list = None):
+        """ Transform `documents` into the tf-idf vectorizer and return a list of vector and convert to dense.
+
+        Args:
+            documents (list): List of documents to vectorize.
+
+        Returns:
+            np.array: Embedding matrix of input documents.
+        """
+
+        # Transform `documents` into the tf-idf vectorizer and return a list of vector and convert to dense.
+        transform_vectors = np.array(self.vectorizer.transform(documents).todense())
+
+        return transform_vectors
+
+    def transform_document_objects(self, documents):
+        """[summary]
+
+        Args:
+            documents ([type]): [description]
+
+        Returns:
+            [type]: [description]
+        """
+
+        document_text = [document.text for document in documents]
+
+        return self.transform(document_text)
+
+    def save(self, tfidf_vectorizer_path):
+        """ Save tf_idf model to the pickle file.
+
+        Args:
+            model_path (str): Path to save to.
+        """
+        with open(tfidf_vectorizer_path, 'wb') as fw:
+            pickle.dump(tfidf_vectorizer_path, fw)
+
 
     @classmethod
     def load(cls, model_path):
+        """ Load vectorizer object from a pickle file.
+
+        Args:
+            model_path (str): Path to tf_idf model.
+
+        Returns:
+            TfidfDocVectorizer: A vectorizer which is loaded.
         """
-        Load tf_idf model from the pickle file
-        """
-        pass
+
+        with open(model_path, 'rb') as f:
+            tfidf_vectorizer = pickle.load(f)
+
+        return tfidf_vectorizer
