@@ -258,10 +258,14 @@ class SQLDocumentStore(BaseDocumentStore):
         Set vector IDs for all documents as None
         """
         index = index or self.index
-        self.session.query(DocumentORM).filter_by(index=index).update({DocumentORM.vector_id: null()})
+        self.session.query(DocumentORM).filter_by(index=index).update(
+            {DocumentORM.vector_id: null()}
+        )
         self.session.commit()
 
-    def update_vector_ids(self, vector_id_map: Dict[str, str], index: Optional[str] = None):
+    def update_vector_ids(
+        self, vector_id_map: Dict[str, str], index: Optional[str] = None
+    ):
         """
         Update vector_ids for given document_ids.
 
@@ -327,7 +331,6 @@ class SQLDocumentStore(BaseDocumentStore):
         if row.vector_id:
             document.meta["vector_id"] = row.vector_id
         return document
-
 
     def query_by_embedding(
         self,
