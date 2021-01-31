@@ -252,6 +252,7 @@ class SQLDocumentStore(BaseDocumentStore):
                 # Rollback is important here otherwise self.session will be in inconsistent state and next call will fail
                 self.session.rollback()
                 raise ex
+
     def reset_vector_ids(self, index: Optional[str] = None):
         """
         Set vector IDs for all documents as None
