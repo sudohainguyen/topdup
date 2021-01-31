@@ -5,10 +5,11 @@ from typing import Dict, List, Optional, Union
 
 import numpy as np
 from scipy.special import expit
-from tqdm.auto import tqdm
+from tqdm import tqdm
 
 from modules.ml.document_store.sql import SQLDocumentStore
 from modules.ml.schema import Document
+
 
 if platform != "win32" and platform != "cygwin":
     import faiss
@@ -80,15 +81,9 @@ class FAISSDocumentStore(SQLDocumentStore):
         if faiss_index:
             self.faiss_index = faiss_index
         else:
-            self.faiss_index = self._create_new_index(
-                vector_dim=self.vector_dim,
-                index_factory=faiss_index_factory_str,
-                **kwargs,
-            )
+            self.faiss_index = self._create_new_index(vector_dim=self.vector_dim, index_factory=faiss_index_factory_str, **kwargs)
 
-            if (
-                "ivf" in faiss_index_factory_str.lower()
-            ):  # enable reconstruction of vectors for inverted index
+            if "ivf" in faiss_index_factory_str.lower():  # enable reconstruction of vectors for inverted index
                 self.faiss_index.set_direct_map_type(faiss.DirectMap.Hashtable)
 
         self.index_buffer_size = index_buffer_size
@@ -234,15 +229,18 @@ class FAISSDocumentStore(SQLDocumentStore):
             embeddings = np.array(embeddings, dtype="float32")
             self.faiss_index.add(embeddings)
 
-            for doc in documents[i : i + self.index_buffer_size]:
+            for doc in documents[i: i + self.index_buffer_size]:
                 print(vector_id, "Duc")
                 vector_id_map[doc.id] = vector_id
                 vector_id += 1
             self.update_vector_ids(vector_id_map, index=index)
             print("update")
 
+
     def get_all_documents(
-        self, index: Optional[str] = None, return_embedding: Optional[bool] = None
+            self,
+            index: Optional[str] = None,
+            return_embedding: Optional[bool] = None
     ) -> List[Document]:
         """
         Get documents from the document store.
@@ -297,14 +295,12 @@ class FAISSDocumentStore(SQLDocumentStore):
         self.faiss_index.reset()
         super().delete_all_documents(index=index)
 
-    def query_ids_by_embedding(
-        self,
-        query_emb: np.array,
-        filters: Optional[dict] = None,
-        top_k: int = 10,
-        index: Optional[str] = None,
-        return_embedding: Optional[bool] = None,
-    ) -> List[Document]:
+    def query_ids_by_embedding(self,
+                           query_emb: np.array,
+                           filters: Optional[dict] = None,
+                           top_k: int = 10,
+                           index: Optional[str] = None,
+                           return_embedding: Optional[bool] = None) -> List[Document]:
         """
         Find the document that is most similar to the provided `query_emb` by using a vector similarity metric.
 
@@ -317,25 +313,20 @@ class FAISSDocumentStore(SQLDocumentStore):
         :return:
         """
         if filters:
-            raise Exception(
-                "Query filters are not implemented for the FAISSDocumentStore."
-            )
+            raise Exception("Query filters are not implemented for the FAISSDocumentStore.")
         if not self.faiss_index:
-            raise Exception(
-                "No index exists. Use 'update_embeddings()` to create an index."
-            )
+            raise Exception("No index exists. Use 'update_embeddings()` to create an index.")
 
         query_emb = query_emb.astype(np.float32)
         return self.faiss_index.search(query_emb, top_k)
 
-    def query_docs_by_embedding(
-        self,
-        query_emb: np.array,
-        filters: Optional[dict] = None,
-        top_k: int = 10,
-        index: Optional[str] = None,
-        return_embedding: Optional[bool] = None,
-    ) -> List[Document]:
+
+    def query_docs_by_embedding(self,
+                           query_emb: np.array,
+                           filters: Optional[dict] = None,
+                           top_k: int = 10,
+                           index: Optional[str] = None,
+                           return_embedding: Optional[bool] = None) -> List[Document]:
         """
         Find the document that is most similar to the provided `query_emb` by using a vector similarity metric.
 
@@ -361,12 +352,8 @@ class FAISSDocumentStore(SQLDocumentStore):
         index = index or self.index
 
         query_emb = query_emb.reshape(1, -1).astype(np.float32)
-        score_matrix, vector_id_matrix = self.query_idxs_by_embedding(
-            query_emb, filters, top_k, index, return_embedding
-        )
-        vector_ids_for_query = [
-            str(vector_id) for vector_id in vector_id_matrix[0] if vector_id != -1
-        ]
+        score_matrix, vector_id_matrix = self.query_idxs_by_embedding(query_emb, filters, top_k, index, return_embedding)
+        vector_ids_for_query = [str(vector_id) for vector_id in vector_id_matrix[0] if vector_id != -1]
 
         documents = self.get_documents_by_vector_ids(vector_ids_for_query, index=index)
 
@@ -417,3 +404,5 @@ class FAISSDocumentStore(SQLDocumentStore):
             index_buffer_size=index_buffer_size,
             vector_dim=faiss_index.d,
         )
+
+
