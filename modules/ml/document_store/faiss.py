@@ -358,3 +358,4 @@ class FAISSDocumentStore(SQLDocumentStore):
             vector_dim=faiss_index.d
         )
 
+
