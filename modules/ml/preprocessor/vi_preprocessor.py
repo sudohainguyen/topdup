@@ -43,13 +43,13 @@ class ViPreProcessor(BasePreProcessor):
         """Perform document cleaning on a single document and return a single document.
         Includes dealing with whitespaces, empty lines.
         """
-        text = document['text']
+        text = document["text"]
 
         text = normalize_text(text)
         text = self._word_segment(text)
         text = _clean_vncore_result(text)
 
-        document['text'] = text
+        document["text"] = text
         return document
 
     def split(self, document: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -59,13 +59,16 @@ class ViPreProcessor(BasePreProcessor):
         if not self.split_length:
             raise ValueError("split_length needs be set when using split_by.")
 
-        if self.split_respect_sentence_boundary \
-                and self.split_by not in("word", "sentence"):
+        if self.split_respect_sentence_boundary and self.split_by not in (
+            "word",
+            "sentence",
+        ):
             raise NotImplementedError(
                 "'split_respect_sentence_boundary=True' is only compatible with"
-                " split_by='word' or split_by='sentence'.")
+                " split_by='word' or split_by='sentence'."
+            )
 
-        text = document['text']
+        text = document["text"]
 
         if self.split_respect_sentence_boundary and self.split_by == "word":
             sentences = nltk.tokenize.sent_tokenize(text)
@@ -100,7 +103,7 @@ class ViPreProcessor(BasePreProcessor):
                 word_count += len(sen.split(" "))
             if current_slice:
                 list_splits.append(current_slice)
-            text_splits = [' '.join(sl) for sl in list_splits]
+            text_splits = [" ".join(sl) for sl in list_splits]
         else:
             if self.split_by == "passage":
                 elems = text.split("\n\n")
@@ -109,13 +112,17 @@ class ViPreProcessor(BasePreProcessor):
             elif self.split_by == "word":
                 elems = text.split(" ")
             else:
-                raise NotImplementedError("ViPreProcessor only supports 'passage', \
-                    'sentence' or 'word' split_by options")
+                raise NotImplementedError(
+                    "ViPreProcessor only supports 'passage', \
+                    'sentence' or 'word' split_by options"
+                )
 
             if self.split_overlap:
-                segments = windowed(elems,
-                                    n=self.split_length,
-                                    step=self.split_length - self.split_length)
+                segments = windowed(
+                    elems,
+                    n=self.split_length,
+                    step=self.split_length - self.split_length,
+                )
             else:
                 segments = windowed(elems, n=self.split_length, step=self.split_length)
             text_splits = []
@@ -136,8 +143,7 @@ class ViPreProcessor(BasePreProcessor):
         return documents
 
     def _word_segment(self, text: str) -> str:
-        """Use VnCoreNLP-based tokenizer for word segmentation
-        """
+        """Use VnCoreNLP-based tokenizer for word segmentation"""
         sentences = self.rdrsegmenter.tokenize(text)
 
         tokenized_sents = []
@@ -150,29 +156,28 @@ class ViPreProcessor(BasePreProcessor):
         return result
 
     def _load_stopwords(
-        self,
-        stopword_path: str = 'modules/ml/data/vietnamese-stopwords.txt'
+        self, stopword_path: str = "modules/ml/data/vietnamese-stopwords.txt"
     ):
         """
-            Load list of stopwords from given path
-            ref: https://github.com/stopwords/vietnamese-stopwords/
+        Load list of stopwords from given path
+        ref: https://github.com/stopwords/vietnamese-stopwords/
         """
         if not os.path.isfile(stopword_path):
-            logger.error('File not found, stopwords list not initialized')
+            logger.error("File not found, stopwords list not initialized")
             return
         if not self.stopwords:
             self.stopwords = []
-        with open(stopword_path, 'r') as f:
+        with open(stopword_path, "r") as f:
             for line in f:
-                word = line.replace('\n', '')
+                word = line.replace("\n", "")
                 self.stopwords.append(word)
 
 
 def _clean_vncore_result(text: str) -> str:
     """Clean special cases caused by VnCoreNLP
-        Example: "cho đến thời_điểm này , có_thể nói ,"
+    Example: "cho đến thời_điểm này , có_thể nói ,"
     """
-    text = re.sub(r'\s([?.!,](?:\s|$))', r'\1', text)
-    text = re.sub(r'\(\s', '(', text)
-    text = re.sub(r'\s\)', ')', text)
+    text = re.sub(r"\s([?.!,](?:\s|$))", r"\1", text)
+    text = re.sub(r"\(\s", "(", text)
+    text = re.sub(r"\s\)", ")", text)
     return text

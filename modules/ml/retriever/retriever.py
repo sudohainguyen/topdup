@@ -1,13 +1,13 @@
-import numpy as np
 import logging
 
+import numpy as np
 
-from modules.ml.vectorizer.tf_idf import TfidfDocVectorizer
 from modules.ml.document_store.faiss import FAISSDocumentStore
 from collections import OrderedDict
 
 
 logger = logging.getLogger(__name__)
+
 
 class Retriever:
 
