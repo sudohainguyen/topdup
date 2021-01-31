@@ -1,10 +1,8 @@
 import logging
+from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Optional, Union
 
-from abc import abstractmethod, ABC
-from typing import Any, Optional, Dict, List, Union
 from modules.ml.schema import Document
-
-
 
 logger = logging.getLogger(__name__)
 

@@ -5,8 +5,7 @@ from modules.ml.preprocessor.vi_preprocessor import ViPreProcessor
 
 
 def test_basic_cleaning_1():
-    """Conduct basic cleaning and compare result
-    """
+    """Conduct basic cleaning and compare result"""
     processor = ViPreProcessor()
     text = (
         "Cho đến thời điểm này, có thể nói, "
@@ -23,8 +22,7 @@ def test_basic_cleaning_1():
 
 
 def test_basic_cleaning_2():
-    """Test if output of clean function is dict and contains key 'text'
-    """
+    """Test if output of clean function is dict and contains key 'text'"""
     processor = ViPreProcessor()
     text = (
         "Cho đến thời điểm này, có thể nói, "
@@ -38,7 +36,7 @@ def test_basic_cleaning_2():
 @pytest.mark.parametrize("srsb", [True, False])
 def test_not_implemented_splitby_in_split(srsb):
     """Test if code could raise exception for invalid args:
-        'split_by' and 'split_respect_sentence_boundary'
+    'split_by' and 'split_respect_sentence_boundary'
     """
     processor = ViPreProcessor(
         split_by="dummy_string", split_respect_sentence_boundary=srsb
@@ -48,7 +46,7 @@ def test_not_implemented_splitby_in_split(srsb):
 
 def test_invalid_split_length():
     """Test if code could raise exception for invalid args:
-        'split_length'
+    'split_length'
     """
     processor = ViPreProcessor(split_length=None)
     assert_raises(lambda: processor.split({"text": "dummy"}), ValueError)
