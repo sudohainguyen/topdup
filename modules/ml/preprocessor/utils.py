@@ -1,33 +1,35 @@
-import re
+import gzip
+import json
 import logging
+import re
 import tarfile
 import tempfile
 import zipfile
-import gzip
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Tuple, Union, Generator
-import json
+from typing import Callable, Dict, Generator, List, Optional, Tuple, Union
 
-# from farm.data_handler.utils import http_get
-
+from modules.ml import Document, Label
 from modules.ml.file_converter.base import BaseConverter
 from modules.ml.file_converter.docx import DocxToTextConverter
 from modules.ml.file_converter.pdf import PDFToTextConverter
 from modules.ml.file_converter.tika import TikaConverter
-from modules.ml import Document, Label
 from modules.ml.file_converter.txt import TextConverter
+
+# from farm.data_handler.utils import http_get
+
 
 logger = logging.getLogger(__name__)
 
 
-
-def eval_data_from_json(filename: str, max_docs: Union[int, bool] = None) -> Tuple[List[Document], List[Label]]:
+def eval_data_from_json(
+    filename: str, max_docs: Union[int, bool] = None
+) -> Tuple[List[Document], List[Label]]:
     """
     Read Documents + Labels from a SQuAD-style file.
     Document and Labels can then be indexed to the DocumentStore and be used for evaluation.
 
     :param filename: Path to file in SQuAD format
-    :param max_docs: This sets the number of documents that will be loaded. By default, this is set to None, thus reading in all available eval documents. 
+    :param max_docs: This sets the number of documents that will be loaded. By default, this is set to None, thus reading in all available eval documents.
     :return: (List of Documents, List of Labels)
     """
 
@@ -37,7 +39,9 @@ def eval_data_from_json(filename: str, max_docs: Union[int, bool] = None) -> Tup
     with open(filename, "r") as file:
         data = json.load(file)
         if "title" not in data["data"][0]:
-            logger.warning(f"No title information found for documents in QA file: {filename}")
+            logger.warning(
+                f"No title information found for documents in QA file: {filename}"
+            )
 
         for document in data["data"]:
             if max_docs:
@@ -51,8 +55,9 @@ def eval_data_from_json(filename: str, max_docs: Union[int, bool] = None) -> Tup
     return docs, labels
 
 
-def eval_data_from_jsonl(filename: str, batch_size: Optional[int] = None,
-                         max_docs: Union[int, bool] = None) -> Generator[Tuple[List[Document], List[Label]], None, None]:
+def eval_data_from_jsonl(
+    filename: str, batch_size: Optional[int] = None, max_docs: Union[int, bool] = None
+) -> Generator[Tuple[List[Document], List[Label]], None, None]:
     """
     Read Documents + Labels from a SQuAD-style file in jsonl format, i.e. one document per line.
     Document and Labels can then be indexed to the DocumentStore and be used for evaluation.
@@ -94,11 +99,15 @@ def _extract_docs_and_labels_from_dict(document_dict: Dict):
     labels = []
 
     # get all extra fields from document level (e.g. title)
-    meta_doc = {k: v for k, v in document_dict.items() if k not in ("paragraphs", "title")}
+    meta_doc = {
+        k: v for k, v in document_dict.items() if k not in ("paragraphs", "title")
+    }
     for paragraph in document_dict["paragraphs"]:
         cur_meta = {"name": document_dict.get("title", None)}
         # all other fields from paragraph level
-        meta_paragraph = {k: v for k, v in paragraph.items() if k not in ("qas", "context")}
+        meta_paragraph = {
+            k: v for k, v in paragraph.items() if k not in ("qas", "context")
+        }
         cur_meta.update(meta_paragraph)
         # meta from parent document
         cur_meta.update(meta_doc)
@@ -137,8 +146,9 @@ def _extract_docs_and_labels_from_dict(document_dict: Dict):
     return docs, labels
 
 
-def convert_files_to_dicts(dir_path: str, clean_func: Optional[Callable] = None, split_paragraphs: bool = False) -> \
-        List[dict]:
+def convert_files_to_dicts(
+    dir_path: str, clean_func: Optional[Callable] = None, split_paragraphs: bool = False
+) -> List[dict]:
     """
     Convert all files(.txt, .pdf, .docx) in the sub-directories of the given path to Python dicts that can be written to a
     Document Store.
@@ -162,8 +172,12 @@ def convert_files_to_dicts(dir_path: str, clean_func: Optional[Callable] = None,
                 suffix2paths[file_suffix] = []
             suffix2paths[file_suffix].append(path)
         elif not path.is_dir():
-            logger.warning('Skipped file {0} as type {1} is not supported here. '
-                           'See modules.ml.file_converter for support of more file types'.format(path, file_suffix))
+            logger.warning(
+                "Skipped file {0} as type {1} is not supported here. "
+                "See modules.ml.file_converter for support of more file types".format(
+                    path, file_suffix
+                )
+            )
 
     # No need to initialize converter if file type not present
     for file_suffix in suffix2paths.keys():
@@ -177,7 +191,7 @@ def convert_files_to_dicts(dir_path: str, clean_func: Optional[Callable] = None,
     documents = []
     for suffix, paths in suffix2paths.items():
         for path in paths:
-            logger.info('Converting {}'.format(path))
+            logger.info("Converting {}".format(path))
             document = suffix2converter[suffix].convert(file_path=path, meta=None)
             text = document["text"]
 
@@ -196,11 +210,11 @@ def convert_files_to_dicts(dir_path: str, clean_func: Optional[Callable] = None,
 
 
 def tika_convert_files_to_dicts(
-        dir_path: str,
-        clean_func: Optional[Callable] = None,
-        split_paragraphs: bool = False,
-        merge_short: bool = True,
-        merge_lowercase: bool = True
+    dir_path: str,
+    clean_func: Optional[Callable] = None,
+    split_paragraphs: bool = False,
+    merge_short: bool = True,
+    merge_lowercase: bool = True,
 ) -> List[dict]:
     """
     Convert all files(.txt, .pdf) in the sub-directories of the given path to Python dicts that can be written to a
@@ -224,12 +238,16 @@ def tika_convert_files_to_dicts(
         if file_suffix in allowed_suffixes:
             file_paths.append(path)
         elif not path.is_dir():
-            logger.warning('Skipped file {0} as type {1} is not supported here. '
-                           'See modules.ml.file_converter for support of more file types'.format(path, file_suffix))
+            logger.warning(
+                "Skipped file {0} as type {1} is not supported here. "
+                "See modules.ml.file_converter for support of more file types".format(
+                    path, file_suffix
+                )
+            )
 
     documents = []
     for path in file_paths:
-        logger.info('Converting {}'.format(path))
+        logger.info("Converting {}".format(path))
         document = converter.convert(path)
         meta = document["meta"] or {}
         meta["name"] = path.name
@@ -240,18 +258,18 @@ def tika_convert_files_to_dicts(
             if pages:
                 paras = pages[0].split("\n\n")
                 # pop the last paragraph from the first page
-                last_para = paras.pop(-1) if paras else ''
+                last_para = paras.pop(-1) if paras else ""
                 for page in pages[1:]:
                     page_paras = page.split("\n\n")
                     # merge the last paragraph in previous page to the first paragraph in this page
                     if page_paras:
-                        page_paras[0] = last_para + ' ' + page_paras[0]
+                        page_paras[0] = last_para + " " + page_paras[0]
                         last_para = page_paras.pop(-1)
                         paras += page_paras
                 if last_para:
                     paras.append(last_para)
                 if paras:
-                    last_para = ''
+                    last_para = ""
                     for para in paras:
                         para = para.strip()
                         if not para:
@@ -259,10 +277,17 @@ def tika_convert_files_to_dicts(
                         # merge paragraphs to improve qa
                         # merge this paragraph if less than 10 characters or 2 words
                         # or this paragraph starts with a lower case and last paragraph does not end with a punctuation
-                        if merge_short and len(para) < 10 or len(re.findall(r'\s+', para)) < 2 \
-                                or merge_lowercase and para and para[0].islower() and last_para \
-                                and last_para[-1] not in r'.?!"\'\]\)':
-                            last_para += ' ' + para
+                        if (
+                            merge_short
+                            and len(para) < 10
+                            or len(re.findall(r"\s+", para)) < 2
+                            or merge_lowercase
+                            and para
+                            and para[0].islower()
+                            and last_para
+                            and last_para[-1] not in r'.?!"\'\]\)'
+                        ):
+                            last_para += " " + para
                         else:
                             if last_para:
                                 documents.append({"text": last_para, "meta": meta})
@@ -323,8 +348,12 @@ def fetch_archive_from_http(url: str, output_dir: str, proxies: Optional[dict] =
                 output = open(output_filename, "wb")
                 output.write(json_bytes)
             else:
-                logger.warning('Skipped url {0} as file type is not supported here. '
-                               'See haystack documentation for support of more file types'.format(url))
+                logger.warning(
+                    "Skipped url {0} as file type is not supported here. "
+                    "See haystack documentation for support of more file types".format(
+                        url
+                    )
+                )
             # temp_file gets deleted here
         return True
 

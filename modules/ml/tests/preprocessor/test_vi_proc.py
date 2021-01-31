@@ -1,5 +1,5 @@
 import pytest
-from qcore.asserts import assert_raises, assert_is
+from qcore.asserts import assert_raises
 
 from modules.ml.preprocessor.vi_preprocessor import ViPreProcessor
 

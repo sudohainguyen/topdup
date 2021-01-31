@@ -1,9 +1,19 @@
 import itertools
 import logging
-from typing import Any, Dict, Union, List, Optional
+from typing import Any, Dict, List, Optional, Union
 from uuid import uuid4
 
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, func, ForeignKey, Boolean, Text
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    create_engine,
+    func,
+)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.sql import case, null
@@ -45,10 +55,11 @@ class MetaORM(ORMBase):
         String(100),
         ForeignKey("document.id", ondelete="CASCADE", onupdate="CASCADE"),
         nullable=False,
-        index=True
+        index=True,
     )
 
     documents = relationship(DocumentORM, backref="Meta")
+
 
 class SQLDocumentStore(BaseDocumentStore):
     def __init__(
@@ -63,7 +74,7 @@ class SQLDocumentStore(BaseDocumentStore):
         An SQL backed DocumentStore. Currently supports SQLite, PostgreSQL and MySQL backends.
 
         :param url: URL for SQL database as expected by SQLAlchemy. More info here: https://docs.sqlalchemy.org/en/13/core/engines.html#database-urls
-        :param index: The documents are scoped to an index attribute that can be used when writing, querying, or deleting documents. 
+        :param index: The documents are scoped to an index attribute that can be used when writing, querying, or deleting documents.
                       This parameter sets the default value for document index.
         :param label_index: The default value of index attribute for the labels.
         :param update_existing_documents: Whether to update any existing documents with the same ID when adding
@@ -88,36 +99,42 @@ class SQLDocumentStore(BaseDocumentStore):
             self.similarity = None
         self.batch_size = batch_size
 
-    def get_document_by_id(self, id: str, index: Optional[str] = None) -> Optional[Document]:
+    def get_document_by_id(
+        self, id: str, index: Optional[str] = None
+    ) -> Optional[Document]:
         """Fetch a document by specifying its text id string"""
         documents = self.get_documents_by_id([id], index)
         document = documents[0] if documents else None
         return document
 
-    def get_documents_by_id(self, ids: List[str], index: Optional[str] = None) -> List[Document]:
+    def get_documents_by_id(
+        self, ids: List[str], index: Optional[str] = None
+    ) -> List[Document]:
         """Fetch documents by specifying a list of text id strings"""
         index = index or self.index
 
         documents = []
         for i in range(0, len(ids), self.batch_size):
             query = self.session.query(DocumentORM).filter(
-                DocumentORM.id.in_(ids[i: i + self.batch_size]),
-                DocumentORM.index == index
+                DocumentORM.id.in_(ids[i : i + self.batch_size]),
+                DocumentORM.index == index,
             )
             for row in query.all():
                 documents.append(self._convert_sql_row_to_document(row))
 
         return documents
 
-    def get_documents_by_vector_ids(self, vector_ids: List[str], index: Optional[str] = None):
+    def get_documents_by_vector_ids(
+        self, vector_ids: List[str], index: Optional[str] = None
+    ):
         """Fetch documents by specifying a list of text vector id strings"""
         index = index or self.index
 
         documents = []
         for i in range(0, len(vector_ids), self.batch_size):
             query = self.session.query(DocumentORM).filter(
-                DocumentORM.vector_id.in_(vector_ids[i: i + self.batch_size]),
-                DocumentORM.index == index
+                DocumentORM.vector_id.in_(vector_ids[i : i + self.batch_size]),
+                DocumentORM.index == index,
             )
             for row in query.all():
                 documents.append(self._convert_sql_row_to_document(row))
@@ -126,10 +143,10 @@ class SQLDocumentStore(BaseDocumentStore):
         return sorted_documents
 
     def get_all_documents(
-            self,
-            index: Optional[str] = None,
-            filters: Optional[Dict[str, List[str]]] = None,
-            return_embedding: Optional[bool] = None
+        self,
+        index: Optional[str] = None,
+        filters: Optional[Dict[str, List[str]]] = None,
+        return_embedding: Optional[bool] = None,
     ) -> List[Document]:
         """
         Get documents from the document store.
@@ -146,9 +163,7 @@ class SQLDocumentStore(BaseDocumentStore):
         # Hence using directly column name improve memory and performance.
         # Refer https://stackoverflow.com/questions/23185319/why-is-loading-sqlalchemy-objects-via-the-orm-5-8x-slower-than-rows-via-a-raw-my
         documents_query = self.session.query(
-            DocumentORM.id,
-            DocumentORM.text,
-            DocumentORM.vector_id
+            DocumentORM.id, DocumentORM.text, DocumentORM.vector_id
         ).filter_by(index=index)
 
         if filters:
@@ -157,7 +172,7 @@ class SQLDocumentStore(BaseDocumentStore):
                 documents_query = documents_query.filter(
                     MetaORM.name == key,
                     MetaORM.value.in_(values),
-                    DocumentORM.id == MetaORM.document_id
+                    DocumentORM.id == MetaORM.document_id,
                 )
 
         documents_map = {}
@@ -165,37 +180,38 @@ class SQLDocumentStore(BaseDocumentStore):
             documents_map[row.id] = Document(
                 id=row.id,
                 text=row.text,
-                meta=None if row.vector_id is None else {"vector_id": row.vector_id} # type: ignore
+                meta=None if row.vector_id is None else {"vector_id": row.vector_id},  # type: ignore
             )
 
-        for doc_ids in self.chunked_iterable(documents_map.keys(), size=self.batch_size):
+        for doc_ids in self.chunked_iterable(
+            documents_map.keys(), size=self.batch_size
+        ):
             meta_query = self.session.query(
-                MetaORM.document_id,
-                MetaORM.name,
-                MetaORM.value
+                MetaORM.document_id, MetaORM.name, MetaORM.value
             ).filter(MetaORM.document_id.in_(doc_ids))
 
             for row in meta_query.all():
                 if documents_map[row.document_id].meta is None:
                     documents_map[row.document_id].meta = {}
-                documents_map[row.document_id].meta[row.name] = row.value # type: ignore
+                documents_map[row.document_id].meta[row.name] = row.value  # type: ignore
 
         return list(documents_map.values())
 
-
-    def write_documents(self, documents: Union[List[dict], List[Document]], index: Optional[str] = None):
+    def write_documents(
+        self, documents: Union[List[dict], List[Document]], index: Optional[str] = None
+    ):
         """
-        Indexes documents for later queries.
+          Indexes documents for later queries.
 
-      :param documents: a list of Python dictionaries or a list of Haystack Document objects.
-                          For documents as dictionaries, the format is {"text": "<the-actual-text>"}.
-                          Optionally: Include meta data via {"text": "<the-actual-text>",
-                          "meta":{"name": "<some-document-name>, "author": "somebody", ...}}
-                          It can be used for filtering and is accessible in the responses of the Finder.
-        :param index: add an optional index attribute to documents. It can be later used for filtering. For instance,
-                      documents for evaluation can be indexed in a separate index than the documents for search.
+        :param documents: a list of Python dictionaries or a list of Haystack Document objects.
+                            For documents as dictionaries, the format is {"text": "<the-actual-text>"}.
+                            Optionally: Include meta data via {"text": "<the-actual-text>",
+                            "meta":{"name": "<some-document-name>, "author": "somebody", ...}}
+                            It can be used for filtering and is accessible in the responses of the Finder.
+          :param index: add an optional index attribute to documents. It can be later used for filtering. For instance,
+                        documents for evaluation can be indexed in a separate index than the documents for search.
 
-        :return: None
+          :return: None
         """
 
         index = index or self.index
@@ -203,16 +219,26 @@ class SQLDocumentStore(BaseDocumentStore):
             return
         # Make sure we comply to Document class format
         if isinstance(documents[0], dict):
-            document_objects = [Document.from_dict(d) if isinstance(d, dict) else d for d in documents]
+            document_objects = [
+                Document.from_dict(d) if isinstance(d, dict) else d for d in documents
+            ]
         else:
             document_objects = documents
 
         for i in range(0, len(document_objects), self.batch_size):
-            for doc in document_objects[i: i + self.batch_size]:
+            for doc in document_objects[i : i + self.batch_size]:
                 meta_fields = doc.meta or {}
                 vector_id = meta_fields.get("vector_id")
-                meta_orms = [MetaORM(name=key, value=value) for key, value in meta_fields.items()]
-                doc_orm = DocumentORM(id=doc.id, text=doc.text, vector_id=vector_id, meta=meta_orms, index=index)
+                meta_orms = [
+                    MetaORM(name=key, value=value) for key, value in meta_fields.items()
+                ]
+                doc_orm = DocumentORM(
+                    id=doc.id,
+                    text=doc.text,
+                    vector_id=vector_id,
+                    meta=meta_orms,
+                    index=index,
+                )
                 if self.update_existing_documents:
                     # First old meta data cleaning is required
                     self.session.query(MetaORM).filter_by(document_id=doc.id).delete()
@@ -226,6 +252,7 @@ class SQLDocumentStore(BaseDocumentStore):
                 # Rollback is important here otherwise self.session will be in inconsistent state and next call will fail
                 self.session.rollback()
                 raise ex
+
     def reset_vector_ids(self, index: Optional[str] = None):
         """
         Set vector IDs for all documents as None
@@ -244,14 +271,16 @@ class SQLDocumentStore(BaseDocumentStore):
         index = index or self.index
         for chunk_map in self.chunked_dict(vector_id_map, size=self.batch_size):
             self.session.query(DocumentORM).filter(
-                DocumentORM.id.in_(chunk_map),
-                DocumentORM.index == index
-            ).update({
-                DocumentORM.vector_id: case(
-                    chunk_map,
-                    value=DocumentORM.id,
-                )
-            }, synchronize_session=False)
+                DocumentORM.id.in_(chunk_map), DocumentORM.index == index
+            ).update(
+                {
+                    DocumentORM.vector_id: case(
+                        chunk_map,
+                        value=DocumentORM.id,
+                    )
+                },
+                synchronize_session=False,
+            )
             try:
                 self.session.commit()
             except Exception as ex:
@@ -264,12 +293,19 @@ class SQLDocumentStore(BaseDocumentStore):
         Update the metadata dictionary of a document by specifying its string id
         """
         self.session.query(MetaORM).filter_by(document_id=id).delete()
-        meta_orms = [MetaORM(name=key, value=value, document_id=id) for key, value in meta.items()]
+        meta_orms = [
+            MetaORM(name=key, value=value, document_id=id)
+            for key, value in meta.items()
+        ]
         for m in meta_orms:
             self.session.add(m)
         self.session.commit()
 
-    def get_document_count(self, filters: Optional[Dict[str, List[str]]] = None, index: Optional[str] = None) -> int:
+    def get_document_count(
+        self,
+        filters: Optional[Dict[str, List[str]]] = None,
+        index: Optional[str] = None,
+    ) -> int:
         """
         Return the number of documents in the document store.
         """
@@ -284,30 +320,35 @@ class SQLDocumentStore(BaseDocumentStore):
         count = query.count()
         return count
 
-
     def _convert_sql_row_to_document(self, row) -> Document:
         document = Document(
-            id=row.id,
-            text=row.text,
-            meta={meta.name: meta.value for meta in row.meta}
+            id=row.id, text=row.text, meta={meta.name: meta.value for meta in row.meta}
         )
         if row.vector_id:
             document.meta["vector_id"] = row.vector_id
         return document
 
 
-    def query_by_embedding(self,
-                           query_emb: List[float],
-                           filters: Optional[dict] = None,
-                           top_k: int = 10,
-                           index: Optional[str] = None,
-                           return_embedding: Optional[bool] = None) -> List[Document]:
+    def query_by_embedding(
+        self,
+        query_emb: List[float],
+        filters: Optional[dict] = None,
+        top_k: int = 10,
+        index: Optional[str] = None,
+        return_embedding: Optional[bool] = None,
+    ) -> List[Document]:
 
-        raise NotImplementedError("SQLDocumentStore is currently not supporting embedding queries. "
-                                  "Change the query type (e.g. by choosing a different retriever) "
-                                  "or change the DocumentStore (e.g. to ElasticsearchDocumentStore)")
+        raise NotImplementedError(
+            "SQLDocumentStore is currently not supporting embedding queries. "
+            "Change the query type (e.g. by choosing a different retriever) "
+            "or change the DocumentStore (e.g. to ElasticsearchDocumentStore)"
+        )
 
-    def delete_all_documents(self, index: Optional[str] = None, filters: Optional[Dict[str, List[str]]] = None):
+    def delete_all_documents(
+        self,
+        index: Optional[str] = None,
+        filters: Optional[Dict[str, List[str]]] = None,
+    ):
         """
         Delete documents in an index. All documents are deleted if no filters are passed.
 
@@ -317,7 +358,9 @@ class SQLDocumentStore(BaseDocumentStore):
         """
 
         if filters:
-            raise NotImplementedError("Delete by filters is not implemented for SQLDocumentStore.")
+            raise NotImplementedError(
+                "Delete by filters is not implemented for SQLDocumentStore."
+            )
         index = index or self.index
         documents = self.session.query(DocumentORM).filter_by(index=index)
         documents.delete(synchronize_session=False)

@@ -3,7 +3,7 @@ import re
 from copy import deepcopy
 from functools import partial, reduce
 from itertools import chain
-from typing import List, Optional, Generator, Set
+from typing import Generator, List, Optional, Set
 
 import nltk
 from more_itertools import windowed
@@ -82,7 +82,7 @@ class PreProcessor(BasePreProcessor):
     def split(self, document: dict) -> List[dict]:
         """Perform document splitting on a single document. This method can split on different units, at different lengths,
         with different strides. It can also respect sentence boundaries. Its exact functionality is defined by
-        the parameters passed into PreProcessor.__init__(). Takes a single document as input and returns a list of documents. """
+        the parameters passed into PreProcessor.__init__(). Takes a single document as input and returns a list of documents."""
 
         if not self.split_by:
             return [document]
@@ -90,9 +90,14 @@ class PreProcessor(BasePreProcessor):
         if not self.split_length:
             raise Exception("split_length needs be set when using split_by.")
 
-        if self.split_respect_sentence_boundary and self.split_by not in("word","sentence"):
-            raise NotImplementedError("'split_respect_sentence_boundary=True' is only compatible with"
-                                      " split_by='word' or split_by='sentence'.")
+        if self.split_respect_sentence_boundary and self.split_by not in (
+            "word",
+            "sentence",
+        ):
+            raise NotImplementedError(
+                "'split_respect_sentence_boundary=True' is only compatible with"
+                " split_by='word' or split_by='sentence'."
+            )
 
         text = document["text"]
 
@@ -105,10 +110,12 @@ class PreProcessor(BasePreProcessor):
             for sen in sentences:
                 current_word_count = len(sen.split(" "))
                 if current_word_count > self.split_length:
-                    logger.warning(f"A sentence found with word count higher than the split length.")
+                    logger.warning(
+                        f"A sentence found with word count higher than the split length."
+                    )
                 if word_count + current_word_count > self.split_length:
                     list_splits.append(current_slice)
-                    #Enable split_stride with split_by='word' while respecting sentence boundaries.
+                    # Enable split_stride with split_by='word' while respecting sentence boundaries.
                     if self.split_overlap:
                         overlap = []
                         w_count = 0
@@ -128,7 +135,7 @@ class PreProcessor(BasePreProcessor):
                 word_count += len(sen.split(" "))
             if current_slice:
                 list_splits.append(current_slice)
-            text_splits = [' '.join(sl) for sl in list_splits]
+            text_splits = [" ".join(sl) for sl in list_splits]
         else:
             # create individual "elements" of passage, sentence, or word
             if self.split_by == "passage":
@@ -138,13 +145,21 @@ class PreProcessor(BasePreProcessor):
             elif self.split_by == "word":
                 elements = text.split(" ")
             else:
-                raise NotImplementedError("PreProcessor only supports 'passage' or 'sentence' split_by options.")
+                raise NotImplementedError(
+                    "PreProcessor only supports 'passage' or 'sentence' split_by options."
+                )
 
             # concatenate individual elements based on split_length & split_stride
             if self.split_overlap:
-                segments = windowed(elements, n=self.split_length, step=self.split_length - self.split_overlap)
+                segments = windowed(
+                    elements,
+                    n=self.split_length,
+                    step=self.split_length - self.split_overlap,
+                )
             else:
-                segments = windowed(elements, n=self.split_length, step=self.split_length)
+                segments = windowed(
+                    elements, n=self.split_length, step=self.split_length
+                )
             text_splits = []
             for seg in segments:
                 txt = " ".join([t for t in seg if t])
@@ -163,7 +178,11 @@ class PreProcessor(BasePreProcessor):
         return documents
 
     def _find_and_remove_header_footer(
-        self, text: str, n_chars: int, n_first_pages_to_ignore: int, n_last_pages_to_ignore: int
+        self,
+        text: str,
+        n_chars: int,
+        n_first_pages_to_ignore: int,
+        n_last_pages_to_ignore: int,
     ) -> str:
         """
         Heuristic to find footers and headers across different pages by searching for the longest common string.
@@ -180,17 +199,23 @@ class PreProcessor(BasePreProcessor):
         pages = text.split("\f")
 
         # header
-        start_of_pages = [p[:n_chars] for p in pages[n_first_pages_to_ignore:-n_last_pages_to_ignore]]
+        start_of_pages = [
+            p[:n_chars] for p in pages[n_first_pages_to_ignore:-n_last_pages_to_ignore]
+        ]
         found_header = self._find_longest_common_ngram(start_of_pages)
         if found_header:
             pages = [page.replace(found_header, "") for page in pages]
 
         # footer
-        end_of_pages = [p[-n_chars:] for p in pages[n_first_pages_to_ignore:-n_last_pages_to_ignore]]
+        end_of_pages = [
+            p[-n_chars:] for p in pages[n_first_pages_to_ignore:-n_last_pages_to_ignore]
+        ]
         found_footer = self._find_longest_common_ngram(end_of_pages)
         if found_footer:
             pages = [page.replace(found_footer, "") for page in pages]
-        logger.debug(f"Removed header '{found_header}' and footer '{found_footer}' in document")
+        logger.debug(
+            f"Removed header '{found_header}' and footer '{found_footer}' in document"
+        )
         text = "\f".join(pages)
         return text
 
@@ -209,13 +234,16 @@ class PreProcessor(BasePreProcessor):
 
         words = seq.split(" ")
         ngrams = (
-            " ".join(words[i : i + n]).replace(" \n", "\n").replace(" \t", "\t") for i in range(0, len(words) - n + 1)
+            " ".join(words[i : i + n]).replace(" \n", "\n").replace(" \t", "\t")
+            for i in range(0, len(words) - n + 1)
         )
 
         return ngrams
 
     def _allngram(self, seq: str, min_ngram: int, max_ngram: int) -> Set[str]:
-        lengths = range(min_ngram, max_ngram) if max_ngram else range(min_ngram, len(seq))
+        lengths = (
+            range(min_ngram, max_ngram) if max_ngram else range(min_ngram, len(seq))
+        )
         ngrams = map(partial(self._ngram, seq), lengths)
         res = set(chain.from_iterable(ngrams))
         return res
@@ -235,7 +263,9 @@ class PreProcessor(BasePreProcessor):
         sequences = [s for s in sequences if s]  # filter empty sequences
         if not sequences:
             return None
-        seqs_ngrams = map(partial(self._allngram, min_ngram=min_ngram, max_ngram=max_ngram), sequences)
+        seqs_ngrams = map(
+            partial(self._allngram, min_ngram=min_ngram, max_ngram=max_ngram), sequences
+        )
         intersection = reduce(set.intersection, seqs_ngrams)
 
         try:

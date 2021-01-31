@@ -1,8 +1,7 @@
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
 
 
 class DocVectorizerBase(ABC):
-
     @abstractmethod
     def fit(self, train_documents):
         pass

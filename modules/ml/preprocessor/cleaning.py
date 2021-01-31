@@ -40,7 +40,7 @@ def normalize_text(text: str) -> str:
     text = re.sub(r"\s+", " ", text)
     text = re.sub("[-_:/]", " ", text)
 
-    text = re.sub(r'http\S+', '', text)
+    text = re.sub(r"http\S+", "", text)
     text = re.sub(r"\.+", ".", text)
     text = re.sub("[?!;…]", ".", text)
     text = text.replace("\n", ".")
