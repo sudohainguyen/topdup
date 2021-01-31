@@ -1,4 +1,5 @@
 import re
+from unicodedata import normalize as unicode_normalize
 
 
 def clean_wiki_text(text: str) -> str:
@@ -26,4 +27,21 @@ def clean_wiki_text(text: str) -> str:
     # remove empty paragrahps
     text = re.sub(r"(==.*==\n\n\n)", "", text)
 
+    return text
+
+
+def normalize_text(text: str) -> str:
+    """
+    Perform text normalization using regex patterns
+    """
+    text = unicode_normalize("NFC", text)
+    text = text.lower()
+    text = re.sub("```(.|\n|\r)*?```", "", text)
+    text = re.sub(r"\s+", " ", text)
+    text = re.sub("[-_:/]", " ", text)
+
+    text = re.sub(r'http\S+', '', text)
+    text = re.sub(r"\.+", ".", text)
+    text = re.sub("[?!;…]", ".", text)
+    text = text.replace("\n", ".")
     return text
