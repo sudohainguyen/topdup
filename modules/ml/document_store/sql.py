@@ -3,8 +3,17 @@ import logging
 from typing import Any, Dict, List, Optional, Union
 from uuid import uuid4
 
-from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Integer, String,
-                        Text, create_engine, func)
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    create_engine,
+    func,
+)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.sql import case, null
@@ -268,12 +277,7 @@ class SQLDocumentStore(BaseDocumentStore):
             self.session.query(DocumentORM).filter(
                 DocumentORM.id.in_(chunk_map), DocumentORM.index == index
             ).update(
-                {
-                    DocumentORM.vector_id: case(
-                        chunk_map,
-                        value=DocumentORM.id,
-                    )
-                },
+                {DocumentORM.vector_id: case(chunk_map, value=DocumentORM.id,)},
                 synchronize_session=False,
             )
             try:

@@ -8,6 +8,7 @@ from scipy.special import expit
 from tqdm.auto import tqdm
 
 from modules.ml.document_store.sql import SQLDocumentStore
+from modules.ml.schema import Document
 
 if platform != "win32" and platform != "cygwin":
     import faiss
