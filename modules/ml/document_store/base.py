@@ -1,14 +1,10 @@
 import logging
-<<<<<<< HEAD
+
 from abc import abstractmethod, ABC
 from typing import Any, Optional, Dict, List, Union
 from modules.ml.schema import Document
-=======
-from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Union
->>>>>>> bd88871fd2b7de26e6029230de1e8c4722c2e740
 
-from modules.ml.schema import Document, Label, MultiLabel
+
 
 logger = logging.getLogger(__name__)
 

@@ -3,7 +3,7 @@ import logging
 import numpy as np
 
 from modules.ml.document_store.faiss import FAISSDocumentStore
-from collections import OrderedDict
+from modules.ml.vectorizer.base import DocVectorizerBase
 
 
 logger = logging.getLogger(__name__)
@@ -13,20 +13,21 @@ class Retriever:
 
     def __init__(self,
                  document_store: FAISSDocumentStore = None,
-                 candidate_vectorizer: TfidfDocVectorizer = None,
-                 retriever_vectorizer: TfidfDocVectorizer = None,
-                 vector_dim:int = 128,
-                 retriver_dim:int = 256
+                 candidate_vectorizer: DocVectorizerBase = None,
+                 retriever_vectorizer: DocVectorizerBase = None,
+                #  vector_dim:int = 128,
+                #  retriver_dim:int = 256
                  ):
-        """
-        :param documents: an instance of a DocumentStore (FAISSDocumentStore) to retrieve document from.
-        :param vectorizer_type: Type of modules use for embedding and compute matrix (TFIDF AS DEFAULT).
-        :param indexer_type: Name of the index in the DocumentStore from which to retrieve documents.
-        :param vector_dim: Dimension for the vector that uses in First Layer.
+        """ Init an instance of a Retriver
 
-        Init document_store and vectorizer
-
+        Args:
+            document_store (FAISSDocumentStore): An instance of DocumentStore (FAISSDocumentStore) to where data is indexed and stored. Defaults to None.
+            candidate_vectorizer (DocVectorizerBase): An instance of vectorizer to convert raw document to embedding. Defaults to None.
+            retriever_vectorizer (DocVectorizerBase): An instance of vectorizer to convert candidate document to embedding. Defaults to None.
+            vector_dim (int, optional): [description]. Defaults to 128.
+            retriver_dim (int, optional): [description]. Defaults to 256.
         """
+
 
         self.document_store = document_store
         self.candidate_vectorizer = candidate_vectorizer
