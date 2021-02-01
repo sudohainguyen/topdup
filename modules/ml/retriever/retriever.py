@@ -17,7 +17,7 @@ class Retriever:
         #  vector_dim:int = 128,
         #  retriever:int = 256,
     ):
-        """Init an instance of a Retriver
+        """Init an instance of a Retriever
 
         Args:
             document_store (FAISSDocumentStore): An instance of DocumentStore (FAISSDocumentStore) to where data is indexed and stored. Defaults to None.
