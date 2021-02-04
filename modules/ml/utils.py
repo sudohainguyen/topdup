@@ -46,7 +46,7 @@ def export_answers_to_csv(agg_results: list, output_file):
     assert "query" in agg_results[0], f"Wrong format used for {agg_results[0]}"
     assert "answers" in agg_results[0], f"Wrong format used for {agg_results[0]}"
 
-    data = {} # type: Dict[str, List[Any]]
+    data = {}  # type: Dict[str, List[Any]]
     data["query"] = []
     data["prediction"] = []
     data["prediction_rank"] = []
@@ -62,7 +62,6 @@ def export_answers_to_csv(agg_results: list, output_file):
 
     df = pd.DataFrame(data)
     df.to_csv(output_file, index=False)
-
 
 
 def convert_labels_to_squad(labels_file: str):
@@ -86,7 +85,7 @@ def convert_labels_to_squad(labels_file: str):
             doc = DocumentORM.query.get(label["document_id"])
 
             assert (
-                doc.text[label["start_offset"] : label["end_offset"]]
+                doc.text[label["start_offset"]: label["end_offset"]]
                 == label["selected_text"]
             )
 
