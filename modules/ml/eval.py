@@ -7,18 +7,18 @@ def calculate_reader_metrics(metric_counts: Dict[str, float], correct_retrievals
     number_of_has_answer = correct_retrievals - metric_counts["number_of_no_answer"]
 
     metrics = {
-        "reader_top1_accuracy" : metric_counts["correct_readings_top1"] / correct_retrievals,
-        "reader_top1_accuracy_has_answer" : metric_counts["correct_readings_top1_has_answer"] / number_of_has_answer,
-        "reader_topk_accuracy" : metric_counts["correct_readings_topk"] / correct_retrievals,
-        "reader_topk_accuracy_has_answer" : metric_counts["correct_readings_topk_has_answer"] / number_of_has_answer,
-        "reader_top1_em" : metric_counts["exact_matches_top1"] / correct_retrievals,
-        "reader_top1_em_has_answer" : metric_counts["exact_matches_top1_has_answer"] / number_of_has_answer,
-        "reader_topk_em" : metric_counts["exact_matches_topk"] / correct_retrievals,
-        "reader_topk_em_has_answer" : metric_counts["exact_matches_topk_has_answer"] / number_of_has_answer,
-        "reader_top1_f1" : metric_counts["summed_f1_top1"] / correct_retrievals,
-        "reader_top1_f1_has_answer" : metric_counts["summed_f1_top1_has_answer"] / number_of_has_answer,
-        "reader_topk_f1" : metric_counts["summed_f1_topk"] / correct_retrievals,
-        "reader_topk_f1_has_answer" : metric_counts["summed_f1_topk_has_answer"] / number_of_has_answer,
+        "reader_top1_accuracy": metric_counts["correct_readings_top1"] / correct_retrievals,
+        "reader_top1_accuracy_has_answer": metric_counts["correct_readings_top1_has_answer"] / number_of_has_answer,
+        "reader_topk_accuracy": metric_counts["correct_readings_topk"] / correct_retrievals,
+        "reader_topk_accuracy_has_answer": metric_counts["correct_readings_topk_has_answer"] / number_of_has_answer,
+        "reader_top1_em": metric_counts["exact_matches_top1"] / correct_retrievals,
+        "reader_top1_em_has_answer": metric_counts["exact_matches_top1_has_answer"] / number_of_has_answer,
+        "reader_topk_em": metric_counts["exact_matches_topk"] / correct_retrievals,
+        "reader_topk_em_has_answer": metric_counts["exact_matches_topk_has_answer"] / number_of_has_answer,
+        "reader_top1_f1": metric_counts["summed_f1_top1"] / correct_retrievals,
+        "reader_top1_f1_has_answer": metric_counts["summed_f1_top1_has_answer"] / number_of_has_answer,
+        "reader_topk_f1": metric_counts["summed_f1_topk"] / correct_retrievals,
+        "reader_topk_f1_has_answer": metric_counts["summed_f1_topk_has_answer"] / number_of_has_answer,
     }
 
     if metric_counts["number_of_no_answer"]:
@@ -86,14 +86,17 @@ def eval_counts_reader(question: MultiLabel, predicted_answers: Dict[str, Any], 
                     if gold_span["doc_id"] == predicted_span["doc_id"]:
                         # check if overlap between gold answer and predicted answer
                         if not found_answer:
-                            metric_counts, found_answer = _count_overlap(gold_span, predicted_span, metric_counts, answer_idx)  # type: ignore
+                            metric_counts, found_answer = _count_overlap(
+                                gold_span, predicted_span, metric_counts, answer_idx)  # type: ignore
 
                         # check for exact match
                         if not found_em:
-                            metric_counts, found_em = _count_exact_match(gold_span, predicted_span, metric_counts, answer_idx)  # type: ignore
+                            metric_counts, found_em = _count_exact_match(
+                                gold_span, predicted_span, metric_counts, answer_idx)  # type: ignore
 
                         # calculate f1
-                        current_f1 = _calculate_f1(gold_span, predicted_span)  # type: ignore
+                        current_f1 = _calculate_f1(
+                            gold_span, predicted_span)  # type: ignore
                         if current_f1 > best_f1_in_gold_spans:
                             best_f1_in_gold_spans = current_f1
                 # top-1 f1
@@ -180,7 +183,7 @@ def _count_overlap(
     predicted_span: Dict[str, Any],
     metric_counts: Dict[str, float],
     answer_idx: int
-    ):
+):
     # Checks if overlap between prediction and real answer.
 
     found_answer = False
@@ -204,7 +207,7 @@ def _count_exact_match(
     predicted_span: Dict[str, Any],
     metric_counts: Dict[str, float],
     answer_idx: int
-    ):
+):
     # Check if exact match between prediction and real answer.
     # As evaluation needs to be framework independent, we cannot use the farm.evaluation.metrics.py functions.
 
@@ -228,7 +231,8 @@ def _calculate_f1(gold_span: Dict[str, Any], predicted_span: Dict[str, Any]):
     # Calculates F1-Score for prediction based on real answer using character offsets.
     # As evaluation needs to be framework independent, we cannot use the farm.evaluation.metrics.py functions.
 
-    pred_indices = list(range(predicted_span["offset_start"], predicted_span["offset_end"]))
+    pred_indices = list(
+        range(predicted_span["offset_start"], predicted_span["offset_end"]))
     gold_indices = list(range(gold_span["offset_start"], gold_span["offset_end"]))
     n_overlap = len([x for x in pred_indices if x in gold_indices])
     if pred_indices and gold_indices and n_overlap:

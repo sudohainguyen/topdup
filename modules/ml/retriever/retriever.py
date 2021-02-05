@@ -153,7 +153,7 @@ class Retriever:
             )
             retrieve_results[query_doc] = {
                 "retrieve_result": retrieve_result,
-                "similarity_score ": round(score[0], 5),
+                "similarity_score": round(score[0], 5),
             }
 
         return retrieve_results

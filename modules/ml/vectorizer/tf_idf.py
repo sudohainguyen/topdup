@@ -91,7 +91,7 @@ class TfidfDocVectorizer(DocVectorizerBase):
             model_path (str): Path to save to.
         """
         with open(tfidf_vectorizer_path, "wb") as fw:
-            pickle.dump(tfidf_vectorizer_path, fw)
+            pickle.dump(self, fw)
 
     @classmethod
     def load(cls, model_path):
@@ -104,7 +104,10 @@ class TfidfDocVectorizer(DocVectorizerBase):
             TfidfDocVectorizer: A vectorizer which is loaded.
         """
 
-        with open(model_path, "rb") as f:
-            tfidf_vectorizer = pickle.load(f)
+        # with open(model_path, "rb") as f:
+        #     tfidf_vectorizer = pickle.load(f)
+        tfidf_vectorizer = pickle.load(open(model_path, "rb"))
+        print(type(tfidf_vectorizer))
+        
 
         return tfidf_vectorizer

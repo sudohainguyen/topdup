@@ -234,8 +234,7 @@ class FAISSDocumentStore(SQLDocumentStore):
             embeddings = np.array(embeddings, dtype="float32")
             self.faiss_index.add(embeddings)
 
-            for doc in documents[i : i + self.index_buffer_size]:
-                print(vector_id, "Duc")
+            for doc in tqdm(documents[i : i + self.index_buffer_size]):
                 vector_id_map[doc.id] = vector_id
                 vector_id += 1
             self.update_vector_ids(vector_id_map, index=index)

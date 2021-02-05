@@ -87,7 +87,8 @@ class Pipeline:
         output_dict = None
 
         while has_next_node:
-            output_dict, stream_id = self.graph.nodes[current_node_id]["component"].run(**input_dict)
+            output_dict, stream_id = self.graph.nodes[current_node_id]["component"].run(
+                **input_dict)
             input_dict = output_dict
             next_nodes = self._get_next_nodes(current_node_id, stream_id)
 
@@ -215,7 +216,8 @@ class DocumentSearchPipeline(BaseStandardPipeline):
         self.pipeline.add_node(component=retriever, name="Retriever", inputs=["Query"])
 
     def run(self, query: str, filters: Optional[Dict] = None, top_k_retriever: int = 10):
-        output = self.pipeline.run(query=query, filters=filters, top_k_retriever=top_k_retriever)
+        output = self.pipeline.run(query=query, filters=filters,
+                                   top_k_retriever=top_k_retriever)
         document_dicts = [doc.to_dict() for doc in output["documents"]]
         output["documents"] = document_dicts
         return output
@@ -231,7 +233,8 @@ class GenerativeQAPipeline(BaseStandardPipeline):
         """
         self.pipeline = Pipeline()
         self.pipeline.add_node(component=retriever, name="Retriever", inputs=["Query"])
-        self.pipeline.add_node(component=generator, name="Generator", inputs=["Retriever"])
+        self.pipeline.add_node(component=generator,
+                               name="Generator", inputs=["Retriever"])
 
     def run(self, query: str, filters: Optional[Dict] = None, top_k_retriever: int = 10, top_k_generator: int = 10):
         output = self.pipeline.run(
@@ -250,7 +253,8 @@ class SearchSummarizationPipeline(BaseStandardPipeline):
         """
         self.pipeline = Pipeline()
         self.pipeline.add_node(component=retriever, name="Retriever", inputs=["Query"])
-        self.pipeline.add_node(component=summarizer, name="Summarizer", inputs=["Retriever"])
+        self.pipeline.add_node(component=summarizer,
+                               name="Summarizer", inputs=["Retriever"])
 
     def run(
         self,
@@ -307,7 +311,8 @@ class FAQPipeline(BaseStandardPipeline):
         self.pipeline.add_node(component=retriever, name="Retriever", inputs=["Query"])
 
     def run(self, query: str, filters: Optional[Dict] = None, top_k_retriever: int = 10):
-        output = self.pipeline.run(query=query, filters=filters, top_k_retriever=top_k_retriever)
+        output = self.pipeline.run(query=query, filters=filters,
+                                   top_k_retriever=top_k_retriever)
         documents = output["documents"]
 
         results: Dict = {"query": query, "answers": []}
@@ -360,7 +365,8 @@ class JoinDocuments:
                         to each retriever score. This param is not compatible with the `concatenate` join_mode.
         :param top_k_join: Limit documents to top_k based on the resulting scores of the join.
         """
-        assert join_mode in ["concatenate", "merge"], f"JoinDocuments node does not support '{join_mode}' join_mode."
+        assert join_mode in [
+            "concatenate", "merge"], f"JoinDocuments node does not support '{join_mode}' join_mode."
 
         assert not (
             weights is not None and join_mode == "concatenate"
@@ -382,7 +388,7 @@ class JoinDocuments:
             if self.weights:
                 weights = self.weights
             else:
-                weights = [1/len(inputs)] * len(inputs)
+                weights = [1 / len(inputs)] * len(inputs)
             for (input_from_node, _), weight in zip(inputs, weights):
                 for doc in input_from_node["documents"]:
                     if document_map.get(doc.id):  # document already exists; update score
