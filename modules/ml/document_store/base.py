@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class BaseDocumentStore(ABC):
     """
-    Base class for implementing Document Stores.
+    Base class for implementing DocumentStores.
     """
 
     index: Optional[str]

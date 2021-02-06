@@ -151,7 +151,7 @@ def convert_files_to_dicts(
 ) -> List[dict]:
     """
     Convert all files(.txt, .pdf, .docx) in the sub-directories of the given path to Python dicts that can be written to a
-    Document Store.
+    DocumentStore.
 
     :param dir_path: path for the documents to be written to the DocumentStore
     :param clean_func: a custom cleaning function that gets applied to each doc (input: str, output:str)
@@ -218,7 +218,7 @@ def tika_convert_files_to_dicts(
 ) -> List[dict]:
     """
     Convert all files(.txt, .pdf) in the sub-directories of the given path to Python dicts that can be written to a
-    Document Store.
+    DocumentStore.
 
     :param merge_lowercase: allow conversion of merged paragraph to lowercase
     :param merge_short: allow merging of short paragraphs

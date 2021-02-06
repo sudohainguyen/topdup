@@ -1,15 +1,18 @@
-from typing import Any, Optional, Dict, List
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 import numpy as np
 
 
 class Document:
-    def __init__(self, text: str,
-                 id: Optional[str] = None,
-                 score: Optional[float] = None,
-                 meta: Dict[str, Any] = None,
-                 embedding: Optional[np.array] = None):
+    def __init__(
+        self,
+        text: str,
+        id: Optional[str] = None,
+        score: Optional[float] = None,
+        meta: Dict[str, Any] = None,
+        embedding: Optional[np.array] = None,
+    ):
         """
         Object used to represent documents / passages in a standardized way within modules.ml.
         For example, this is what the retriever will return from the DocumentStore,

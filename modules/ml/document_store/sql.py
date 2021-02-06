@@ -149,7 +149,7 @@ class SQLDocumentStore(BaseDocumentStore):
         return_embedding: Optional[bool] = None,
     ) -> List[Document]:
         """
-        Get documents from the document store.
+        Get documents from the DocumentStore.
 
         :param index: Name of the index to get the documents from. If None, the
                       DocumentStore's default index (self.index) will be used.
@@ -276,7 +276,12 @@ class SQLDocumentStore(BaseDocumentStore):
             self.session.query(DocumentORM).filter(
                 DocumentORM.id.in_(chunk_map), DocumentORM.index == index
             ).update(
-                {DocumentORM.vector_id: case(chunk_map, value=DocumentORM.id,)},
+                {
+                    DocumentORM.vector_id: case(
+                        chunk_map,
+                        value=DocumentORM.id,
+                    )
+                },
                 synchronize_session=False,
             )
             try:
@@ -305,7 +310,7 @@ class SQLDocumentStore(BaseDocumentStore):
         index: Optional[str] = None,
     ) -> int:
         """
-        Return the number of documents in the document store.
+        Return the number of documents in the DocumentStore.
         """
         index = index or self.index
         query = self.session.query(DocumentORM).filter_by(index=index)

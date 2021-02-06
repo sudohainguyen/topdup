@@ -1,45 +1,46 @@
 import os
 from pathlib import Path
+
 # import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from modules.ml.document_store.faiss import FAISSDocumentStore
+from modules.ml.document_store.sql import DocumentORM, ORMBase
 from modules.ml.retriever.retriever import Retriever
 from modules.ml.vectorizer.tf_idf import TfidfDocVectorizer
-from modules.ml.document_store.sql import DocumentORM, ORMBase
-
 
 parent_cwd = Path(__file__).parent.parent
 test_db_path = os.path.join(parent_cwd, "document_store/topdup.db")
 
 
-def test_retrieve_with_database():
+def test_retriever_with_database():
 
-    print('Init vectorizer')
+    print("Init vectorizers")
     cand_vectorizer = TfidfDocVectorizer(128)
-    retriver_vectorizer = TfidfDocVectorizer(256)
+    rtrv_vectorizer = TfidfDocVectorizer(256)
 
-    print('Init document store')
+    print("Init DocumentStore")
     document_store = FAISSDocumentStore(sql_url=f"sqlite:///{test_db_path}")
 
-    print('Init retriever')
+    print("Init retriever")
     retriever = Retriever(
         document_store=document_store,
         candidate_vectorizer=cand_vectorizer,
-        retriever_vectorizer=retriver_vectorizer)
+        retriever_vectorizer=rtrv_vectorizer,
+    )
 
-    # Traing vectorizer for two phases of searching
-    print('Training vectorizer')
+    # Train vectorizers for two phases of searching
+    print("Training vectorizers")
     retriever.train_candidate_vectorizer()
     retriever.train_retriever_vectorizer()
 
-    # update embedding after training to document store
-    print('Updating embedding to document store')
+    # Update trained embeddings to DocumentStore
+    print("Updating embeddings to DocumentStore")
     retriever.update_embeddings()
 
-    # Get a document from data base as input for retriver
-    print('Query sample input from data base')
+    # Get a document from the database as input for retriever
+    print("Query sample input from database")
     url = f"sqlite:///{test_db_path}"
     engine = create_engine(url)
     ORMBase.metadata.create_all(engine)
@@ -50,20 +51,21 @@ def test_retrieve_with_database():
 
     # Get text from query to input
     input_doc = query.all()[0].text
+    print(" ".join(input_doc.split(" ")[:50]))  # print the query doc
 
     # Init expected result
     expected_text_result = input_doc
     expected_score_result = 1
 
-    print('Retrieving')
+    print("Retrieving")
 
     result = retriever.retrieve([input_doc], top_k_candidates=10)
-    assert result[input_doc]['retrieve_result'] == expected_text_result
-    assert result[input_doc]['similarity_score'] == expected_score_result
+    print(
+        " ".join(result[input_doc]["retrieve_result"].split(" ")[:50])
+    )  # print the retrieved doc
+    assert result[input_doc]["retrieve_result"] == expected_text_result
+    assert result[input_doc]["similarity_score"] == expected_score_result
 
 
-
-
-
-
-
+if __name__ == "__main__":
+    test_retriever_with_database()

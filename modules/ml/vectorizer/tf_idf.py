@@ -108,6 +108,5 @@ class TfidfDocVectorizer(DocVectorizerBase):
         #     tfidf_vectorizer = pickle.load(f)
         tfidf_vectorizer = pickle.load(open(model_path, "rb"))
         print(type(tfidf_vectorizer))
-        
 
         return tfidf_vectorizer
