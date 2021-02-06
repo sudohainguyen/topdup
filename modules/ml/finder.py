@@ -1,15 +1,19 @@
 import logging
 import time
+from collections import defaultdict
 from copy import deepcopy
 from statistics import mean
-from typing import Optional, Dict, Any, List
-from collections import defaultdict
+from typing import Any, Dict, List, Optional
 
-from modules.ml.reader.base import BaseReader
 # from modules.ml.retriever.base import BaseRetriever
 from modules.ml import MultiLabel
-from modules.ml.eval import calculate_average_precision_and_reciprocal_rank, eval_counts_reader_batch, \
-    calculate_reader_metrics, eval_counts_reader
+from modules.ml.eval import (
+    calculate_average_precision_and_reciprocal_rank,
+    calculate_reader_metrics,
+    eval_counts_reader,
+    eval_counts_reader_batch,
+)
+from modules.ml.reader.base import BaseReader
 
 logger = logging.getLogger(__name__)
 
@@ -39,9 +43,18 @@ class Finder:
         self.retriever = retriever
         self.reader = reader
         if self.reader is None and self.retriever is None:
-            raise AttributeError("Finder: self.reader and self.retriever can not be both None")
+            raise AttributeError(
+                "Finder: self.reader and self.retriever can not be both None"
+            )
 
-    def get_answers(self, question: str, top_k_reader: int = 1, top_k_retriever: int = 10, filters: Optional[dict] = None, index: str = None):
+    def get_answers(
+        self,
+        question: str,
+        top_k_reader: int = 1,
+        top_k_retriever: int = 10,
+        filters: Optional[dict] = None,
+        index: str = None,
+    ):
         """
         Get top k answers for a given question.
 
@@ -63,10 +76,14 @@ class Finder:
             2. The `question` parameter in search requests & results is renamed to `query`."""
         )
         if self.retriever is None or self.reader is None:
-            raise AttributeError("Finder.get_answers requires self.retriever AND self.reader")
+            raise AttributeError(
+                "Finder.get_answers requires self.retriever AND self.reader"
+            )
 
         # 1) Apply retriever(with optional filters) to get fast candidate documents
-        documents = self.retriever.retrieve(question, filters=filters, top_k=top_k_retriever, index=index)
+        documents = self.retriever.retrieve(
+            question, filters=filters, top_k=top_k_retriever, index=index
+        )
         logger.info(f"Got {len(documents)} candidates from retriever")
         logger.debug(f"Retrieved document IDs: {[doc.id for doc in documents]}")
 
@@ -79,9 +96,9 @@ class Finder:
         len_chars = sum([len(d.text) for d in documents])
         logger.info(f"Reader is looking for detailed answer in {len_chars} chars ...")
 
-        results = self.reader.predict(query=question,
-                                      documents=documents,
-                                      top_k=top_k_reader)  # type: Dict[str, Any]
+        results = self.reader.predict(
+            query=question, documents=documents, top_k=top_k_reader
+        )  # type: Dict[str, Any]
         results["question"] = results["query"]
 
         # Add corresponding document_name and more meta data, if an answer contains the document_id
@@ -93,7 +110,13 @@ class Finder:
 
         return results
 
-    def get_answers_via_similar_questions(self, question: str, top_k_retriever: int = 10, filters: Optional[dict] = None, index: str = None):
+    def get_answers_via_similar_questions(
+        self,
+        question: str,
+        top_k_retriever: int = 10,
+        filters: Optional[dict] = None,
+        index: str = None,
+    ):
         """
         Get top k answers for a given question using only a retriever.
 
@@ -106,17 +129,20 @@ class Finder:
         """
 
         if self.retriever is None:
-            raise AttributeError("Finder.get_answers_via_similar_questions requires self.retriever")
+            raise AttributeError(
+                "Finder.get_answers_via_similar_questions requires self.retriever"
+            )
 
         results = {"question": question, "answers": []}  # type: Dict[str, Any]
 
-
         # 1) Apply retriever to match similar questions via cosine similarity of embeddings
-        documents = self.retriever.retrieve(question, top_k=top_k_retriever, filters=filters, index=index)
+        documents = self.retriever.retrieve(
+            question, top_k=top_k_retriever, filters=filters, index=index
+        )
 
         # 2) Format response
         for doc in documents:
-            #TODO proper calibratation of pseudo probabilities
+            # TODO proper calibratation of pseudo probabilities
             cur_answer = {
                 "question": doc.question,
                 "answer": doc.text,
@@ -126,8 +152,8 @@ class Finder:
                 "probability": doc.probability,
                 "offset_start": 0,
                 "offset_end": len(doc.text),
-                "meta": doc.meta
-             }
+                "meta": doc.meta,
+            }
 
             results["answers"].append(cur_answer)
 
@@ -194,12 +220,16 @@ class Finder:
         """
 
         if not self.reader or not self.retriever:
-            raise Exception("Finder needs to have a reader and retriever for the evaluation.")
+            raise Exception(
+                "Finder needs to have a reader and retriever for the evaluation."
+            )
 
         finder_start_time = time.time()
         # extract all questions for evaluation
         filters = {"origin": [label_origin]}
-        questions = self.retriever.document_store.get_all_labels_aggregated(index=label_index, filters=filters)
+        questions = self.retriever.document_store.get_all_labels_aggregated(
+            index=label_index, filters=filters
+        )
 
         counts = defaultdict(float)  # type: Dict[str, float]
         retrieve_times = []
@@ -211,7 +241,9 @@ class Finder:
         for q_idx, question in enumerate(questions):
             question_string = question.question
             single_retrieve_start = time.time()
-            retrieved_docs = self.retriever.retrieve(question_string, top_k=top_k_retriever, index=doc_index)
+            retrieved_docs = self.retriever.retrieve(
+                question_string, top_k=top_k_retriever, index=doc_index
+            )
             retrieve_times.append(time.time() - single_retrieve_start)
             number_relevant_docs = len(set(question.multiple_document_ids))
 
@@ -232,13 +264,14 @@ class Finder:
                         break
             if found_relevant_doc:
                 all_relevant_docs = len(set(question.multiple_document_ids))
-                counts["summed_avg_precision_retriever"] += current_avg_precision / all_relevant_docs
+                counts["summed_avg_precision_retriever"] += (
+                    current_avg_precision / all_relevant_docs
+                )
 
             if found_relevant_doc:
-                questions_with_docs.append({
-                    "question": question,
-                    "docs": retrieved_docs
-                })
+                questions_with_docs.append(
+                    {"question": question, "docs": retrieved_docs}
+                )
 
         retriever_total_time = time.time() - retriever_start_time
         counts["number_of_questions"] = q_idx + 1
@@ -257,25 +290,41 @@ class Finder:
             question_string = question.question
             docs = question_docs["docs"]  # type: ignore
             single_reader_start = time.time()
-            predicted_answers = self.reader.predict(question_string, docs, top_k=top_k_reader) # type: ignore
+            predicted_answers = self.reader.predict(
+                question_string, docs, top_k=top_k_reader
+            )  # type: ignore
             read_times.append(time.time() - single_reader_start)
             if return_preds:
                 predictions.append(predicted_answers)
             counts = eval_counts_reader(question, predicted_answers, counts)
 
-        counts["number_of_has_answer"] = counts["correct_retrievals"] - counts["number_of_no_answer"]
+        counts["number_of_has_answer"] = (
+            counts["correct_retrievals"] - counts["number_of_no_answer"]
+        )
 
         reader_total_time = time.time() - reader_start_time
         finder_total_time = time.time() - finder_start_time
 
         self.reader.return_no_answers = previous_return_no_answers  # type: ignore
 
-        logger.info((f"{counts['correct_readings_topk']} out of {counts['number_of_questions']} questions were correctly"
-                     f" answered {(counts['correct_readings_topk']/counts['number_of_questions']):.2%})."))
-        logger.info((f"{counts['number_of_questions']-counts['correct_retrievals']} questions could not be answered due "
-                    f"to the retriever."))
-        logger.info((f"{counts['correct_retrievals']-counts['correct_readings_topk']} questions could not be answered "
-                    f"due to the reader."))
+        logger.info(
+            (
+                f"{counts['correct_readings_topk']} out of {counts['number_of_questions']} questions were correctly"
+                f" answered {(counts['correct_readings_topk']/counts['number_of_questions']):.2%})."
+            )
+        )
+        logger.info(
+            (
+                f"{counts['number_of_questions']-counts['correct_retrievals']} questions could not be answered due "
+                f"to the retriever."
+            )
+        )
+        logger.info(
+            (
+                f"{counts['correct_retrievals']-counts['correct_readings_topk']} questions could not be answered "
+                f"due to the reader."
+            )
+        )
 
         eval_results = self.calc_eval_results(counts)
         eval_results["total_retrieve_time"] = retriever_total_time
@@ -292,7 +341,7 @@ class Finder:
     def eval_batch(
         self,
         label_index: str,
-        doc_index : str,
+        doc_index: str,
         label_origin: str = "gold_label",
         top_k_retriever: int = 10,
         top_k_reader: int = 10,
@@ -353,24 +402,32 @@ class Finder:
         """
 
         if not self.reader or not self.retriever:
-            raise Exception("Finder needs to have a reader and retriever for the evaluation.")
+            raise Exception(
+                "Finder needs to have a reader and retriever for the evaluation."
+            )
 
         counts = defaultdict(float)  # type: Dict[str, float]
         finder_start_time = time.time()
 
         # extract all questions for evaluation
         filters = {"origin": [label_origin]}
-        questions = self.retriever.document_store.get_all_labels_aggregated(index=label_index, filters=filters)
+        questions = self.retriever.document_store.get_all_labels_aggregated(
+            index=label_index, filters=filters
+        )
         number_of_questions = len(questions)
 
         # retrieve documents
         retriever_start_time = time.time()
-        questions_with_docs = self._retrieve_docs(questions, top_k=top_k_retriever, doc_index=doc_index)
+        questions_with_docs = self._retrieve_docs(
+            questions, top_k=top_k_retriever, doc_index=doc_index
+        )
         retriever_total_time = time.time() - retriever_start_time
 
-        questions_with_correct_doc, \
-        summed_avg_precision_retriever, \
-        summed_reciprocal_rank_retriever = calculate_average_precision_and_reciprocal_rank(questions_with_docs)
+        (
+            questions_with_correct_doc,
+            summed_avg_precision_retriever,
+            summed_reciprocal_rank_retriever,
+        ) = calculate_average_precision_and_reciprocal_rank(questions_with_docs)
 
         correct_retrievals = len(questions_with_correct_doc)
 
@@ -378,8 +435,9 @@ class Finder:
         previous_return_no_answers = self.reader.return_no_answers
         self.reader.return_no_answers = True
         reader_start_time = time.time()
-        predictions = self.reader.predict_batch(questions_with_correct_doc,
-                                                top_k=top_k_reader, batch_size=batch_size)
+        predictions = self.reader.predict_batch(
+            questions_with_correct_doc, top_k=top_k_reader, batch_size=batch_size
+        )
         reader_total_time = time.time() - reader_start_time
 
         for pred in predictions:
@@ -390,23 +448,32 @@ class Finder:
         results = calculate_reader_metrics(counts, correct_retrievals)
         results["retriever_recall"] = correct_retrievals / number_of_questions
         results["retriever_map"] = summed_avg_precision_retriever / number_of_questions
-        results["retriever_mrr"] = summed_reciprocal_rank_retriever / number_of_questions
+        results["retriever_mrr"] = (
+            summed_reciprocal_rank_retriever / number_of_questions
+        )
         results["total_retrieve_time"] = retriever_total_time
         results["avg_retrieve_time"] = retriever_total_time / number_of_questions
         results["total_reader_time"] = reader_total_time
         results["avg_reader_time"] = reader_total_time / correct_retrievals
         results["total_finder_time"] = finder_total_time
 
-        logger.info((f"{counts['correct_readings_topk']} out of {number_of_questions} questions were correctly "
-                     f"answered ({(counts['correct_readings_topk'] / number_of_questions):.2%})."))
-        logger.info(f"{number_of_questions - correct_retrievals} questions could not be answered due to the retriever.")
-        logger.info(f"{correct_retrievals - counts['correct_readings_topk']} questions could not be answered due to the reader.")
+        logger.info(
+            (
+                f"{counts['correct_readings_topk']} out of {number_of_questions} questions were correctly "
+                f"answered ({(counts['correct_readings_topk'] / number_of_questions):.2%})."
+            )
+        )
+        logger.info(
+            f"{number_of_questions - correct_retrievals} questions could not be answered due to the retriever."
+        )
+        logger.info(
+            f"{correct_retrievals - counts['correct_readings_topk']} questions could not be answered due to the reader."
+        )
 
         if return_preds:
             return {"metrics": results, "predictions": predictions}
         else:
             return results
-
 
     def _retrieve_docs(self, questions: List[MultiLabel], top_k: int, doc_index: str):
         # Retrieves documents for a list of Labels (= questions)
@@ -414,14 +481,12 @@ class Finder:
 
         for question in questions:
             question_string = question.question
-            retrieved_docs = self.retriever.retrieve(question_string, top_k=top_k, index=doc_index)  # type: ignore
-            questions_with_docs.append({
-                "question": question,
-                "docs": retrieved_docs
-            })
+            retrieved_docs = self.retriever.retrieve(
+                question_string, top_k=top_k, index=doc_index
+            )  # type: ignore
+            questions_with_docs.append({"question": question, "docs": retrieved_docs})
 
         return questions_with_docs
-
 
     @staticmethod
     def print_eval_results(finder_eval_results: Dict):
@@ -429,39 +494,83 @@ class Finder:
             finder_eval_results = finder_eval_results["metrics"]
 
         print("\n___Retriever Metrics in Finder___")
-        print(f"Retriever Recall            : {finder_eval_results['retriever_recall']:.3f}")
-        print(f"Retriever Mean Avg Precision: {finder_eval_results['retriever_map']:.3f}")
-        print(f"Retriever Mean Reciprocal Rank: {finder_eval_results['retriever_mrr']:.3f}")
+        print(
+            f"Retriever Recall            : {finder_eval_results['retriever_recall']:.3f}"
+        )
+        print(
+            f"Retriever Mean Avg Precision: {finder_eval_results['retriever_map']:.3f}"
+        )
+        print(
+            f"Retriever Mean Reciprocal Rank: {finder_eval_results['retriever_mrr']:.3f}"
+        )
 
         # Reader is only evaluated with those questions, where the correct document is among the retrieved ones
         print("\n___Reader Metrics in Finder___")
         print("Top-k accuracy")
-        print(f"Reader Top-1 accuracy             : {finder_eval_results['reader_top1_accuracy']:.3f}")
-        print(f"Reader Top-1 accuracy (has answer): {finder_eval_results['reader_top1_accuracy_has_answer']:.3f}")
-        print(f"Reader Top-k accuracy             : {finder_eval_results['reader_topk_accuracy']:.3f}")
-        print(f"Reader Top-k accuracy (has answer): {finder_eval_results['reader_topk_accuracy_has_answer']:.3f}")
+        print(
+            f"Reader Top-1 accuracy             : {finder_eval_results['reader_top1_accuracy']:.3f}"
+        )
+        print(
+            f"Reader Top-1 accuracy (has answer): {finder_eval_results['reader_top1_accuracy_has_answer']:.3f}"
+        )
+        print(
+            f"Reader Top-k accuracy             : {finder_eval_results['reader_topk_accuracy']:.3f}"
+        )
+        print(
+            f"Reader Top-k accuracy (has answer): {finder_eval_results['reader_topk_accuracy_has_answer']:.3f}"
+        )
         print("Exact Match")
-        print(f"Reader Top-1 EM                   : {finder_eval_results['reader_top1_em']:.3f}")
-        print(f"Reader Top-1 EM (has answer)      : {finder_eval_results['reader_top1_em_has_answer']:.3f}")
-        print(f"Reader Top-k EM                   : {finder_eval_results['reader_topk_em']:.3f}")
-        print(f"Reader Top-k EM (has answer)      : {finder_eval_results['reader_topk_em_has_answer']:.3f}")
+        print(
+            f"Reader Top-1 EM                   : {finder_eval_results['reader_top1_em']:.3f}"
+        )
+        print(
+            f"Reader Top-1 EM (has answer)      : {finder_eval_results['reader_top1_em_has_answer']:.3f}"
+        )
+        print(
+            f"Reader Top-k EM                   : {finder_eval_results['reader_topk_em']:.3f}"
+        )
+        print(
+            f"Reader Top-k EM (has answer)      : {finder_eval_results['reader_topk_em_has_answer']:.3f}"
+        )
         print("F1 score")
-        print(f"Reader Top-1 F1                   : {finder_eval_results['reader_top1_f1']:.3f}")
-        print(f"Reader Top-1 F1 (has answer)      : {finder_eval_results['reader_top1_f1_has_answer']:.3f}")
-        print(f"Reader Top-k F1                   : {finder_eval_results['reader_topk_f1']:.3f}")
-        print(f"Reader Top-k F1 (has answer)      : {finder_eval_results['reader_topk_f1_has_answer']:.3f}")
-        if finder_eval_results['reader_top1_no_answer_accuracy']:
+        print(
+            f"Reader Top-1 F1                   : {finder_eval_results['reader_top1_f1']:.3f}"
+        )
+        print(
+            f"Reader Top-1 F1 (has answer)      : {finder_eval_results['reader_top1_f1_has_answer']:.3f}"
+        )
+        print(
+            f"Reader Top-k F1                   : {finder_eval_results['reader_topk_f1']:.3f}"
+        )
+        print(
+            f"Reader Top-k F1 (has answer)      : {finder_eval_results['reader_topk_f1_has_answer']:.3f}"
+        )
+        if finder_eval_results["reader_top1_no_answer_accuracy"]:
             print("No Answer")
-            print(f"Reader Top-1 no-answer accuracy   : {finder_eval_results['reader_top1_no_answer_accuracy']:.3f}")
-            print(f"Reader Top-k no-answer accuracy   : {finder_eval_results['reader_topk_no_answer_accuracy']:.3f}")
+            print(
+                f"Reader Top-1 no-answer accuracy   : {finder_eval_results['reader_top1_no_answer_accuracy']:.3f}"
+            )
+            print(
+                f"Reader Top-k no-answer accuracy   : {finder_eval_results['reader_topk_no_answer_accuracy']:.3f}"
+            )
 
         # Time measurements
         print("\n___Time Measurements___")
-        print(f"Total retrieve time           : {finder_eval_results['total_retrieve_time']:.3f}")
-        print(f"Avg retrieve time per question: {finder_eval_results['avg_retrieve_time']:.3f}")
-        print(f"Total reader timer            : {finder_eval_results['total_reader_time']:.3f}")
-        print(f"Avg read time per question    : {finder_eval_results['avg_reader_time']:.3f}")
-        print(f"Total Finder time             : {finder_eval_results['total_finder_time']:.3f}")
+        print(
+            f"Total retrieve time           : {finder_eval_results['total_retrieve_time']:.3f}"
+        )
+        print(
+            f"Avg retrieve time per question: {finder_eval_results['avg_retrieve_time']:.3f}"
+        )
+        print(
+            f"Total reader timer            : {finder_eval_results['total_reader_time']:.3f}"
+        )
+        print(
+            f"Avg read time per question    : {finder_eval_results['avg_reader_time']:.3f}"
+        )
+        print(
+            f"Total Finder time             : {finder_eval_results['total_finder_time']:.3f}"
+        )
 
     @staticmethod
     def calc_eval_results(eval_counts: Dict):
@@ -471,25 +580,59 @@ class Finder:
         number_of_has_answer = eval_counts["number_of_has_answer"]
         number_of_no_answer = eval_counts["number_of_no_answer"]
 
-        eval_results["retriever_recall"] = eval_counts["correct_retrievals"] / number_of_questions
-        eval_results["retriever_map"] = eval_counts["summed_avg_precision_retriever"] / number_of_questions
-        eval_results["retriever_mrr"] = eval_counts["summed_reciprocal_rank_retriever"] / number_of_questions
+        eval_results["retriever_recall"] = (
+            eval_counts["correct_retrievals"] / number_of_questions
+        )
+        eval_results["retriever_map"] = (
+            eval_counts["summed_avg_precision_retriever"] / number_of_questions
+        )
+        eval_results["retriever_mrr"] = (
+            eval_counts["summed_reciprocal_rank_retriever"] / number_of_questions
+        )
 
-        eval_results["reader_top1_accuracy"] = eval_counts["correct_readings_top1"] / correct_retrievals
-        eval_results["reader_top1_accuracy_has_answer"] = eval_counts["correct_readings_top1_has_answer"] / number_of_has_answer
-        eval_results["reader_topk_accuracy"] = eval_counts["correct_readings_topk"] / correct_retrievals
-        eval_results["reader_topk_accuracy_has_answer"] = eval_counts["correct_readings_topk_has_answer"] / number_of_has_answer
-        eval_results["reader_top1_em"] = eval_counts["exact_matches_top1"] / correct_retrievals
-        eval_results["reader_top1_em_has_answer"] = eval_counts["exact_matches_top1_has_answer"] / number_of_has_answer
-        eval_results["reader_topk_em"] = eval_counts["exact_matches_topk"] / correct_retrievals
-        eval_results["reader_topk_em_has_answer"] = eval_counts["exact_matches_topk_has_answer"] / number_of_has_answer
-        eval_results["reader_top1_f1"] = eval_counts["summed_f1_top1"] / correct_retrievals
-        eval_results["reader_top1_f1_has_answer"] = eval_counts["summed_f1_top1_has_answer"] / number_of_has_answer
-        eval_results["reader_topk_f1"] = eval_counts["summed_f1_topk"] / correct_retrievals
-        eval_results["reader_topk_f1_has_answer"] = eval_counts["summed_f1_topk_has_answer"] / number_of_has_answer
+        eval_results["reader_top1_accuracy"] = (
+            eval_counts["correct_readings_top1"] / correct_retrievals
+        )
+        eval_results["reader_top1_accuracy_has_answer"] = (
+            eval_counts["correct_readings_top1_has_answer"] / number_of_has_answer
+        )
+        eval_results["reader_topk_accuracy"] = (
+            eval_counts["correct_readings_topk"] / correct_retrievals
+        )
+        eval_results["reader_topk_accuracy_has_answer"] = (
+            eval_counts["correct_readings_topk_has_answer"] / number_of_has_answer
+        )
+        eval_results["reader_top1_em"] = (
+            eval_counts["exact_matches_top1"] / correct_retrievals
+        )
+        eval_results["reader_top1_em_has_answer"] = (
+            eval_counts["exact_matches_top1_has_answer"] / number_of_has_answer
+        )
+        eval_results["reader_topk_em"] = (
+            eval_counts["exact_matches_topk"] / correct_retrievals
+        )
+        eval_results["reader_topk_em_has_answer"] = (
+            eval_counts["exact_matches_topk_has_answer"] / number_of_has_answer
+        )
+        eval_results["reader_top1_f1"] = (
+            eval_counts["summed_f1_top1"] / correct_retrievals
+        )
+        eval_results["reader_top1_f1_has_answer"] = (
+            eval_counts["summed_f1_top1_has_answer"] / number_of_has_answer
+        )
+        eval_results["reader_topk_f1"] = (
+            eval_counts["summed_f1_topk"] / correct_retrievals
+        )
+        eval_results["reader_topk_f1_has_answer"] = (
+            eval_counts["summed_f1_topk_has_answer"] / number_of_has_answer
+        )
         if number_of_no_answer:
-            eval_results["reader_top1_no_answer_accuracy"] = eval_counts["correct_no_answers_top1"] / number_of_no_answer
-            eval_results["reader_topk_no_answer_accuracy"] = eval_counts["correct_no_answers_topk"] / number_of_no_answer
+            eval_results["reader_top1_no_answer_accuracy"] = (
+                eval_counts["correct_no_answers_top1"] / number_of_no_answer
+            )
+            eval_results["reader_topk_no_answer_accuracy"] = (
+                eval_counts["correct_no_answers_topk"] / number_of_no_answer
+            )
         else:
             eval_results["reader_top1_no_answer_accuracy"] = None
             eval_results["reader_topk_no_answer_accuracy"] = None

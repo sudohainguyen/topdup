@@ -14,17 +14,13 @@ class Retriever:
         document_store: FAISSDocumentStore = None,
         candidate_vectorizer: DocVectorizerBase = None,
         retriever_vectorizer: DocVectorizerBase = None,
-        #  vector_dim:int = 128,
-        #  retriever:int = 256,
     ):
-        """Init an instance of a Retriver
+        """Init an instance of a Retriever
 
         Args:
             document_store (FAISSDocumentStore): An instance of DocumentStore (FAISSDocumentStore) to where data is indexed and stored. Defaults to None.
-            candidate_vectorizer (DocVectorizerBase): An instance of vectorizer to convert raw document to embedding. Defaults to None.
-            retriever_vectorizer (DocVectorizerBase): An instance of vectorizer to convert candidate document to embedding. Defaults to None.
-            vector_dim (int, optional): [description]. Defaults to 128.
-            retriever (int, optional): [description]. Defaults to 256.
+            candidate_vectorizer (DocVectorizerBase): An instance of vectorizer to convert QUERY documents to embedding. Defaults to None.
+            retriever_vectorizer (DocVectorizerBase): An instance of vectorizer to convert CANDIDATE documents to embeddings. Defaults to None.
         """
 
         self.document_store = document_store
@@ -46,7 +42,7 @@ class Retriever:
             ]
 
             if not self.training_documents or len(self.training_documents) == 0:
-                logger.warning("Fit method called with empty document store")
+                logger.warning("Fit method called with empty DocumentStore")
                 return
         self.spare_documnet_embedding = self.candidate_vectorizer.fit_transform(
             self.training_documents
@@ -68,7 +64,7 @@ class Retriever:
             ]
 
             if not self.training_documents or len(self.training_documents) == 0:
-                logger.warning("Fit method called with empty document store")
+                logger.warning("Fit method called with empty DocumentStore")
                 return
         self.spare_documnet_embedding = self.retriever_vectorizer.fit_transform(
             self.training_documents
@@ -85,18 +81,19 @@ class Retriever:
     def get_candidates(
         self, query_docs: str, top_k: int = 10, index: str = None, filters=None
     ):
-        """
-        :param query_docs: The document query
-        :param top_k: How many document to return
-        :param add_to_index: Add query document into DocumentStore and add embedding query into ...
-        Scan through query_docs and convert it into embedding vector for comparison
+        """Scan through query_docs and convert it into embedding vector for comparison
 
-        Return a small a number of document (top_k) that are most relevant to each query_doc
+        Args:
+            :param query_docs: The query documents
+            :param top_k: How many document to return
+
+        Returns:
+            Return a small a number of documents (top_k) that are most relevant to each query_doc
         """
 
-        query_emb = self.candidate_vectorizer.transform(query_docs)
+        query_embs = self.candidate_vectorizer.transform(query_docs)
         score_matrix, vector_id_matrix = self.document_store.query_ids_by_embedding(
-            query_emb=query_emb, filters=filters, top_k=top_k, index=index
+            query_emb=query_embs, filters=filters, top_k=top_k, index=index
         )
 
         return score_matrix, vector_id_matrix
@@ -112,14 +109,14 @@ class Retriever:
             [type]: [description]
         """
 
-        question_vector = self.retriever_vectorizer.transform([query_doc])
+        query_emb = self.retriever_vectorizer.transform([query_doc])
         candidate_ids = list(map(str, candidate_ids))
 
         candidate_docs = self.document_store.get_documents_by_vector_ids(candidate_ids)
         candidate_text_docs = [candidate_doc.text for candidate_doc in candidate_docs]
         candidate_embs = self.retriever_vectorizer.transform(candidate_text_docs)
 
-        scores = candidate_embs.dot(question_vector.T)
+        scores = candidate_embs.dot(query_emb.T)
         idx_scores = [(idx, score) for idx, score in enumerate(scores)]
 
         highest_score = sorted(idx_scores, key=(lambda tup: tup[1]), reverse=True)[0]
@@ -153,7 +150,7 @@ class Retriever:
             )
             retrieve_results[query_doc] = {
                 "retrieve_result": retrieve_result,
-                "similarity_score ": round(score[0], 5),
+                "similarity_score": round(score[0], 5),
             }
 
         return retrieve_results

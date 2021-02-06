@@ -44,7 +44,7 @@ def main():
     processor = ViPreProcessor()
     data = pickle.load(open(os.path.join(cwd, "post_dataset.pkl"), "rb"))
     docs = list()
-    for d in tqdm(data):
+    for d in tqdm(data[:1000]):
         content, meta = data_prep(jsonpickle.loads(d))
         doc = processor.clean({"text": content})
         for m in meta.keys():

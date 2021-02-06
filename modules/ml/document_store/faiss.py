@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 class FAISSDocumentStore(SQLDocumentStore):
     """
-    Document store for very large scale embedding based dense retrievers like the DPR.
+    DocumentStore for very large scale embedding based dense retrievers like the DPR.
 
     It implements the FAISS library(https://github.com/facebookresearch/faiss)
     to perform similarity search on vectors.
@@ -71,7 +71,7 @@ class FAISSDocumentStore(SQLDocumentStore):
                                           documents. When set as True, any document with an existing ID gets updated.
                                           If set to False, an error is raised if the document ID of the document being
                                           added already exists.
-        :param index: Name of index in document store to use.
+        :param index: Name of index in DocumentStore to use.
         :param similarity: The similarity function used to compare document vectors. 'dot_product' is the default sine it is
                    more performant with DPR embeddings. 'cosine' is recommended if you are using a Sentence BERT model.
         """
@@ -97,7 +97,7 @@ class FAISSDocumentStore(SQLDocumentStore):
             self.similarity = similarity
         else:
             raise ValueError(
-                "The FAISS document store can currently only support dot_product similarity. "
+                "The FAISS DocumentStore can currently only support dot_product similarity. "
                 'Please set similarity="dot_product"'
             )
         super().__init__(
@@ -190,7 +190,7 @@ class FAISSDocumentStore(SQLDocumentStore):
 
     def update_embeddings(self, vecterizer, index: Optional[str] = None):
         """
-        Updates the embeddings in the the document store using the encoding model specified in the retriever.
+        Updates the embeddings in the the DocumentStore using the encoding model specified in the retriever.
         This can be useful if want to add or change the embeddings for your documents (e.g. after changing the retriever config).
 
         :param retriever: Retriever to use to get embeddings for text
@@ -234,8 +234,7 @@ class FAISSDocumentStore(SQLDocumentStore):
             embeddings = np.array(embeddings, dtype="float32")
             self.faiss_index.add(embeddings)
 
-            for doc in documents[i : i + self.index_buffer_size]:
-                print(vector_id, "Duc")
+            for doc in tqdm(documents[i : i + self.index_buffer_size]):
                 vector_id_map[doc.id] = vector_id
                 vector_id += 1
             self.update_vector_ids(vector_id_map, index=index)
@@ -245,7 +244,7 @@ class FAISSDocumentStore(SQLDocumentStore):
         self, index: Optional[str] = None, return_embedding: Optional[bool] = None
     ) -> List[Document]:
         """
-        Get documents from the document store.
+        Get documents from the DocumentStore.
 
         :param index: Name of the index to get the documents from. If None, the
                       DocumentStore's default index (self.index) will be used.
@@ -291,7 +290,7 @@ class FAISSDocumentStore(SQLDocumentStore):
 
     def delete_all_documents(self, index=None):
         """
-        Delete all documents from the document store.
+        Delete all documents from the DocumentStore.
         """
         index = index or self.index
         self.faiss_index.reset()

@@ -1,15 +1,18 @@
-from typing import Any, Optional, Dict, List
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 import numpy as np
 
 
 class Document:
-    def __init__(self, text: str,
-                 id: Optional[str] = None,
-                 score: Optional[float] = None,
-                 meta: Dict[str, Any] = None,
-                 embedding: Optional[np.array] = None):
+    def __init__(
+        self,
+        text: str,
+        id: Optional[str] = None,
+        score: Optional[float] = None,
+        meta: Dict[str, Any] = None,
+        embedding: Optional[np.array] = None,
+    ):
         """
         Object used to represent documents / passages in a standardized way within modules.ml.
         For example, this is what the retriever will return from the DocumentStore,
@@ -39,7 +42,7 @@ class Document:
         self.embedding = embedding
 
     def to_dict(self, field_map={}):
-        inv_field_map = {v:k for k, v in field_map.items()}
+        inv_field_map = {v: k for k, v in field_map.items()}
         _doc: Dict[str, str] = {}
         for k, v in self.__dict__.items():
             k = k if k not in inv_field_map else inv_field_map[k]

@@ -1,6 +1,6 @@
 from copy import deepcopy
 from pathlib import Path
-from typing import List, Optional, Dict
+from typing import Dict, List, Optional
 
 import networkx as nx
 from networkx import DiGraph
@@ -8,6 +8,7 @@ from networkx.drawing.nx_agraph import to_agraph
 
 from modules.ml.generator.base import BaseGenerator
 from modules.ml.reader.base import BaseReader
+
 # from modules.ml.retriever.base import BaseRetriever
 from modules.ml.summarizer.base import BaseSummarizer
 
@@ -46,14 +47,22 @@ class Pipeline:
         for i in inputs:
             if "." in i:
                 [input_node_name, input_edge_name] = i.split(".")
-                assert "output_" in input_edge_name, f"'{input_edge_name}' is not a valid edge name."
-                outgoing_edges_input_node = self.graph.nodes[input_node_name]["component"].outgoing_edges
-                assert int(input_edge_name.split("_")[1]) <= outgoing_edges_input_node, (
+                assert (
+                    "output_" in input_edge_name
+                ), f"'{input_edge_name}' is not a valid edge name."
+                outgoing_edges_input_node = self.graph.nodes[input_node_name][
+                    "component"
+                ].outgoing_edges
+                assert (
+                    int(input_edge_name.split("_")[1]) <= outgoing_edges_input_node
+                ), (
                     f"Cannot connect '{input_edge_name}' from '{input_node_name}' as it only has "
                     f"{outgoing_edges_input_node} outgoing edge(s)."
                 )
             else:
-                outgoing_edges_input_node = self.graph.nodes[i]["component"].outgoing_edges
+                outgoing_edges_input_node = self.graph.nodes[i][
+                    "component"
+                ].outgoing_edges
                 assert outgoing_edges_input_node == 1, (
                     f"Adding an edge from {i} to {name} is ambiguous as {i} has {outgoing_edges_input_node} edges. "
                     f"Please specify the output explicitly."
@@ -87,7 +96,9 @@ class Pipeline:
         output_dict = None
 
         while has_next_node:
-            output_dict, stream_id = self.graph.nodes[current_node_id]["component"].run(**input_dict)
+            output_dict, stream_id = self.graph.nodes[current_node_id]["component"].run(
+                **input_dict
+            )
             input_dict = output_dict
             next_nodes = self._get_next_nodes(current_node_id, stream_id)
 
@@ -128,9 +139,11 @@ class Pipeline:
         try:
             import pygraphviz
         except ImportError:
-            raise ImportError(f"Could not import `pygraphviz`. Please install via: \n"
-                              f"pip install pygraphviz\n"
-                              f"(You might need to run this first: apt install libgraphviz-dev graphviz )")
+            raise ImportError(
+                f"Could not import `pygraphviz`. Please install via: \n"
+                f"pip install pygraphviz\n"
+                f"(You might need to run this first: apt install libgraphviz-dev graphviz )"
+            )
 
         graphviz = to_agraph(self.graph)
         graphviz.layout("dot")
@@ -197,9 +210,18 @@ class ExtractiveQAPipeline(BaseStandardPipeline):
         self.pipeline.add_node(component=retriever, name="Retriever", inputs=["Query"])
         self.pipeline.add_node(component=reader, name="Reader", inputs=["Retriever"])
 
-    def run(self, query: str, filters: Optional[Dict] = None, top_k_retriever: int = 10, top_k_reader: int = 10):
+    def run(
+        self,
+        query: str,
+        filters: Optional[Dict] = None,
+        top_k_retriever: int = 10,
+        top_k_reader: int = 10,
+    ):
         output = self.pipeline.run(
-            query=query, filters=filters, top_k_retriever=top_k_retriever, top_k_reader=top_k_reader
+            query=query,
+            filters=filters,
+            top_k_retriever=top_k_retriever,
+            top_k_reader=top_k_reader,
         )
         return output
 
@@ -214,8 +236,12 @@ class DocumentSearchPipeline(BaseStandardPipeline):
         self.pipeline = Pipeline()
         self.pipeline.add_node(component=retriever, name="Retriever", inputs=["Query"])
 
-    def run(self, query: str, filters: Optional[Dict] = None, top_k_retriever: int = 10):
-        output = self.pipeline.run(query=query, filters=filters, top_k_retriever=top_k_retriever)
+    def run(
+        self, query: str, filters: Optional[Dict] = None, top_k_retriever: int = 10
+    ):
+        output = self.pipeline.run(
+            query=query, filters=filters, top_k_retriever=top_k_retriever
+        )
         document_dicts = [doc.to_dict() for doc in output["documents"]]
         output["documents"] = document_dicts
         return output
@@ -231,11 +257,22 @@ class GenerativeQAPipeline(BaseStandardPipeline):
         """
         self.pipeline = Pipeline()
         self.pipeline.add_node(component=retriever, name="Retriever", inputs=["Query"])
-        self.pipeline.add_node(component=generator, name="Generator", inputs=["Retriever"])
+        self.pipeline.add_node(
+            component=generator, name="Generator", inputs=["Retriever"]
+        )
 
-    def run(self, query: str, filters: Optional[Dict] = None, top_k_retriever: int = 10, top_k_generator: int = 10):
+    def run(
+        self,
+        query: str,
+        filters: Optional[Dict] = None,
+        top_k_retriever: int = 10,
+        top_k_generator: int = 10,
+    ):
         output = self.pipeline.run(
-            query=query, filters=filters, top_k_retriever=top_k_retriever, top_k_generator=top_k_generator
+            query=query,
+            filters=filters,
+            top_k_retriever=top_k_retriever,
+            top_k_generator=top_k_generator,
         )
         return output
 
@@ -250,7 +287,9 @@ class SearchSummarizationPipeline(BaseStandardPipeline):
         """
         self.pipeline = Pipeline()
         self.pipeline.add_node(component=retriever, name="Retriever", inputs=["Query"])
-        self.pipeline.add_node(component=summarizer, name="Summarizer", inputs=["Retriever"])
+        self.pipeline.add_node(
+            component=summarizer, name="Summarizer", inputs=["Retriever"]
+        )
 
     def run(
         self,
@@ -258,7 +297,7 @@ class SearchSummarizationPipeline(BaseStandardPipeline):
         filters: Optional[Dict] = None,
         top_k_retriever: int = 10,
         generate_single_summary: bool = False,
-        return_in_answer_format=False
+        return_in_answer_format=False,
     ):
         """
         :param query: Your search query
@@ -270,7 +309,10 @@ class SearchSummarizationPipeline(BaseStandardPipeline):
                                         With the latter, you can use this pipeline as a "drop-in replacement" for other QA pipelines.
         """
         output = self.pipeline.run(
-            query=query, filters=filters, top_k_retriever=top_k_retriever, generate_single_summary=generate_single_summary
+            query=query,
+            filters=filters,
+            top_k_retriever=top_k_retriever,
+            generate_single_summary=generate_single_summary,
         )
 
         # Convert to answer format to allow "drop-in replacement" for other QA pipelines
@@ -306,8 +348,12 @@ class FAQPipeline(BaseStandardPipeline):
         self.pipeline = Pipeline()
         self.pipeline.add_node(component=retriever, name="Retriever", inputs=["Query"])
 
-    def run(self, query: str, filters: Optional[Dict] = None, top_k_retriever: int = 10):
-        output = self.pipeline.run(query=query, filters=filters, top_k_retriever=top_k_retriever)
+    def run(
+        self, query: str, filters: Optional[Dict] = None, top_k_retriever: int = 10
+    ):
+        output = self.pipeline.run(
+            query=query, filters=filters, top_k_retriever=top_k_retriever
+        )
         documents = output["documents"]
 
         results: Dict = {"query": query, "answers": []}
@@ -350,7 +396,10 @@ class JoinDocuments:
     outgoing_edges = 1
 
     def __init__(
-        self, join_mode: str = "concatenate", weights: Optional[List[float]] = None, top_k_join: Optional[int] = None
+        self,
+        join_mode: str = "concatenate",
+        weights: Optional[List[float]] = None,
+        top_k_join: Optional[int] = None,
     ):
         """
         :param join_mode: `concatenate` to combine documents from multiple retrievers or `merge` to aggregate scores of
@@ -360,7 +409,10 @@ class JoinDocuments:
                         to each retriever score. This param is not compatible with the `concatenate` join_mode.
         :param top_k_join: Limit documents to top_k based on the resulting scores of the join.
         """
-        assert join_mode in ["concatenate", "merge"], f"JoinDocuments node does not support '{join_mode}' join_mode."
+        assert join_mode in [
+            "concatenate",
+            "merge",
+        ], f"JoinDocuments node does not support '{join_mode}' join_mode."
 
         assert not (
             weights is not None and join_mode == "concatenate"
@@ -382,10 +434,12 @@ class JoinDocuments:
             if self.weights:
                 weights = self.weights
             else:
-                weights = [1/len(inputs)] * len(inputs)
+                weights = [1 / len(inputs)] * len(inputs)
             for (input_from_node, _), weight in zip(inputs, weights):
                 for doc in input_from_node["documents"]:
-                    if document_map.get(doc.id):  # document already exists; update score
+                    if document_map.get(
+                        doc.id
+                    ):  # document already exists; update score
                         document_map[doc.id].score += doc.score * weight
                     else:  # add the document in map
                         document_map[doc.id] = deepcopy(doc)

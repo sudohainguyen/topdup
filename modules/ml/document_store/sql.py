@@ -149,7 +149,7 @@ class SQLDocumentStore(BaseDocumentStore):
         return_embedding: Optional[bool] = None,
     ) -> List[Document]:
         """
-        Get documents from the document store.
+        Get documents from the DocumentStore.
 
         :param index: Name of the index to get the documents from. If None, the
                       DocumentStore's default index (self.index) will be used.
@@ -161,7 +161,6 @@ class SQLDocumentStore(BaseDocumentStore):
         index = index or self.index
         # Generally ORM objects kept in memory cause performance issue
         # Hence using directly column name improve memory and performance.
-        # Refer https://stackoverflow.com/questions/23185319/why-is-loading-sqlalchemy-objects-via-the-orm-5-8x-slower-than-rows-via-a-raw-my
         documents_query = self.session.query(
             DocumentORM.id, DocumentORM.text, DocumentORM.vector_id
         ).filter_by(index=index)
@@ -311,7 +310,7 @@ class SQLDocumentStore(BaseDocumentStore):
         index: Optional[str] = None,
     ) -> int:
         """
-        Return the number of documents in the document store.
+        Return the number of documents in the DocumentStore.
         """
         index = index or self.index
         query = self.session.query(DocumentORM).filter_by(index=index)
