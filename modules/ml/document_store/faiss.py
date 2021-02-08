@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 class FAISSDocumentStore(SQLDocumentStore):
     """
-    DocumentStore for very large scale embedding based dense retrievers like the DPR.
+    Document store for very large scale embedding based dense retrievers like the DPR.
 
     It implements the FAISS library(https://github.com/facebookresearch/faiss)
     to perform similarity search on vectors.
@@ -71,7 +71,7 @@ class FAISSDocumentStore(SQLDocumentStore):
                                           documents. When set as True, any document with an existing ID gets updated.
                                           If set to False, an error is raised if the document ID of the document being
                                           added already exists.
-        :param index: Name of index in DocumentStore to use.
+        :param index: Name of index in document store to use.
         :param similarity: The similarity function used to compare document vectors. 'dot_product' is the default sine it is
                    more performant with DPR embeddings. 'cosine' is recommended if you are using a Sentence BERT model.
         """
@@ -97,7 +97,7 @@ class FAISSDocumentStore(SQLDocumentStore):
             self.similarity = similarity
         else:
             raise ValueError(
-                "The FAISS DocumentStore can currently only support dot_product similarity. "
+                "The FAISS document store can currently only support dot_product similarity. "
                 'Please set similarity="dot_product"'
             )
         super().__init__(
@@ -173,9 +173,10 @@ class FAISSDocumentStore(SQLDocumentStore):
 
             docs_to_write_in_sql = []
             for doc in document_objects[i : i + self.index_buffer_size]:
-                meta = doc.meta
+                # meta = doc.meta
                 if add_vectors:
-                    meta["vector_id"] = vector_id
+                    # meta["vector_id"] = vector_id
+                    doc.vector_id = vector_id
                     vector_id += 1
                 docs_to_write_in_sql.append(doc)
 
@@ -190,7 +191,7 @@ class FAISSDocumentStore(SQLDocumentStore):
 
     def update_embeddings(self, vecterizer, index: Optional[str] = None):
         """
-        Updates the embeddings in the the DocumentStore using the encoding model specified in the retriever.
+        Updates the embeddings in the the document store using the encoding model specified in the retriever.
         This can be useful if want to add or change the embeddings for your documents (e.g. after changing the retriever config).
 
         :param retriever: Retriever to use to get embeddings for text
@@ -244,7 +245,7 @@ class FAISSDocumentStore(SQLDocumentStore):
         self, index: Optional[str] = None, return_embedding: Optional[bool] = None
     ) -> List[Document]:
         """
-        Get documents from the DocumentStore.
+        Get documents from the document store.
 
         :param index: Name of the index to get the documents from. If None, the
                       DocumentStore's default index (self.index) will be used.
@@ -255,9 +256,10 @@ class FAISSDocumentStore(SQLDocumentStore):
             return_embedding = self.return_embedding
         if return_embedding:
             for doc in documents:
-                if doc.meta and doc.meta.get("vector_id") is not None:
+                if doc.meta and doc.vector_id is not None:
                     doc.embedding = self.faiss_index.reconstruct(
-                        int(doc.meta["vector_id"])
+                        # int(doc.meta["vector_id"])
+                        int(doc.vector_id)
                     )
         return documents
 
@@ -290,7 +292,7 @@ class FAISSDocumentStore(SQLDocumentStore):
 
     def delete_all_documents(self, index=None):
         """
-        Delete all documents from the DocumentStore.
+        Delete all documents from the document store.
         """
         index = index or self.index
         self.faiss_index.reset()
@@ -374,10 +376,12 @@ class FAISSDocumentStore(SQLDocumentStore):
             str(v_id): s for v_id, s in zip(vector_id_matrix[0], score_matrix[0])
         }
         for doc in documents:
-            doc.score = scores_for_vector_ids[doc.meta["vector_id"]]
+            # doc.score = scores_for_vector_ids[doc.meta["vector_id"]]
+            doc.score = scores_for_vector_ids[doc.vector_id]
             doc.probability = float(expit(np.asarray(doc.score / 100)))
             if return_embedding is True:
-                doc.embedding = self.faiss_index.reconstruct(int(doc.meta["vector_id"]))
+                # doc.embedding = self.faiss_index.reconstruct(int(doc.meta["vector_id"]))
+                doc.embedding = self.faiss_index.reconstruct(int(doc.vector_id))
 
         return documents
 

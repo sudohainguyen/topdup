@@ -1,9 +1,12 @@
 import logging
-
 import numpy as np
+from typing import List
+from tqdm import tqdm
 
 from modules.ml.document_store.faiss import FAISSDocumentStore
 from modules.ml.vectorizer.base import DocVectorizerBase
+from modules.ml.preprocessor.vi_preprocessor import ViPreProcessor
+
 
 logger = logging.getLogger(__name__)
 
@@ -15,27 +18,28 @@ class Retriever:
         candidate_vectorizer: DocVectorizerBase = None,
         retriever_vectorizer: DocVectorizerBase = None,
     ):
-        """Init an instance of a Retriever
+        """ Init an instance of a Retriever
 
         Args:
-            document_store (FAISSDocumentStore): An instance of DocumentStore (FAISSDocumentStore) to where data is indexed and stored. Defaults to None.
-            candidate_vectorizer (DocVectorizerBase): An instance of vectorizer to convert QUERY documents to embedding. Defaults to None.
-            retriever_vectorizer (DocVectorizerBase): An instance of vectorizer to convert CANDIDATE documents to embeddings. Defaults to None.
+            document_store (FAISSDocumentStore): An instance of DocumentStore (FAISSDocumentStore)
+                                                 to where data is indexed and stored. Defaults to None.
+            candidate_vectorizer (DocVectorizerBase): An instance of vectorizer to convert
+                                                 QUERY documents (in database) to embedding. Defaults to None.
+            retriever_vectorizer (DocVectorizerBase): An instance of vectorizer to convert
+                                                 CANDIDATE documents to embeddings. Defaults to None.
         """
 
         self.document_store = document_store
         self.candidate_vectorizer = candidate_vectorizer
         self.retriever_vectorizer = retriever_vectorizer
 
-    def train_candidate_vectorizer(self, training_documents=None, save_path=None):
+    def train_candidate_vectorizer(self, training_documents: List[str] = None, save_path: str = None):
+        """ Train vectorizer for first phase (get candidates)
+
+        Args:
+            training_documents (List[str]): Training documents for vectorizer. Defaults to None.
+            save_path (str): Path to save paramenters of vectorizer model. Defaults to None.
         """
-        Vectorize the document and transform into dense
-
-        Add the vector into the index
-
-        Not sure the output for this one because it does not link or return anything
-        """
-
         if not training_documents or len(training_documents):
             self.training_documents = [
                 document.text for document in self.document_store.get_all_documents()
@@ -44,6 +48,9 @@ class Retriever:
             if not self.training_documents or len(self.training_documents) == 0:
                 logger.warning("Fit method called with empty DocumentStore")
                 return
+        else:
+            self.training_documents = training_documents
+
         self.spare_documnet_embedding = self.candidate_vectorizer.fit_transform(
             self.training_documents
         )
@@ -51,12 +58,12 @@ class Retriever:
         if save_path:
             self.candidate_vectorizer.save(save_path)
 
-    def train_retriever_vectorizer(self, training_documents=None, save_path=None):
-        """[summary]
+    def train_retriever_vectorizer(self, training_documents: List[str] = None, save_path: str = None):
+        """ Train vectorizer for second phase (get candidates)
 
         Args:
-            training_documents ([type], optional): [description]. Defaults to None.
-            save_path ([type], optional): [description]. Defaults to None.
+            training_documents (List[str]): Training documents for vectorizer. Defaults to None.
+            save_path (str): Path to save paramenters of vectorizer model. Defaults to None.
         """
         if not training_documents or len(training_documents):
             self.training_documents = [
@@ -66,6 +73,9 @@ class Retriever:
             if not self.training_documents or len(self.training_documents) == 0:
                 logger.warning("Fit method called with empty DocumentStore")
                 return
+        else:
+            self.training_documents = training_documents
+
         self.spare_documnet_embedding = self.retriever_vectorizer.fit_transform(
             self.training_documents
         )
@@ -74,41 +84,41 @@ class Retriever:
             self.retriever_vectorizer.save(save_path)
 
     def update_embeddings(self):
-        """Update embedding of document in 1st phase to `document_store`."""
+        """ Update embedding of document in 1st phase to `document_store`.
+        """
 
         self.document_store.update_embeddings(self.candidate_vectorizer)
 
     def get_candidates(
-        self, query_docs: str, top_k: int = 10, index: str = None, filters=None
+        self, query_docs: List[str], top_k: int = 10, index: str = None, filters=None
     ):
-        """Scan through query_docs and convert it into embedding vector for comparison
+        """ First phase of retriever to get top_k candidates
 
         Args:
-            :param query_docs: The query documents
-            :param top_k: How many document to return
+            query_docs (List[str]): The documents to query. Defaults to None.
+            top_k (int, optional): How many document to return for each query_doc. Defaults to 10.
 
         Returns:
-            Return a small a number of documents (top_k) that are most relevant to each query_doc
+            tuple: Return a tuple of score_matrix and vector_id_matrix (top_k)
+                             that are most relevant to each query_doc
         """
-
         query_embs = self.candidate_vectorizer.transform(query_docs)
         score_matrix, vector_id_matrix = self.document_store.query_ids_by_embedding(
             query_emb=query_embs, filters=filters, top_k=top_k, index=index
         )
 
-        return score_matrix, vector_id_matrix
+        return query_embs, score_matrix, vector_id_matrix
 
     def _calc_scores_for_candidates(self, query_doc, candidate_ids):
-        """[summary]
+        """ Caculate scores for each candidate in 2nd phase
 
         Args:
-            query_doc ([type]): [description]
-            candidate_ids ([type]): [description]
+            query_doc (str, optional): The document to query. Defaults to None.
+            candidate_ids (List[int]): List of candidate_ids of query. Defaults to None.
 
         Returns:
             [type]: [description]
         """
-
         query_emb = self.retriever_vectorizer.transform([query_doc])
         candidate_ids = list(map(str, candidate_ids))
 
@@ -123,34 +133,100 @@ class Retriever:
 
         return candidate_text_docs[highest_score[0]], highest_score[1]
 
-    def retrieve(self, query_docs, top_k_candidates=10, index=None, filters=None):
+    def batch_retrieve(self, query_docs, top_k_candidates=10, processe_query_docs=True, index=None, filters=None):
         """[summary]
 
         Args:
             query_docs ([type]): [description]
-            top_k_candidates ([type]): [description]
-            index ([type]): [description]
-            filters ([type]): [description]
-        """
+            top_k_candidates (int, optional): [description]. Defaults to 10.
+            processe_query_docs (bool, optional): [description]. Defaults to True.
+            index ([type], optional): [description]. Defaults to None.
+            filters ([type], optional): [description]. Defaults to None.
 
-        _, candidate_id_matrix = self.get_candidates(
+        Returns:
+            [type]: [description]
+        """
+        processor = ViPreProcessor()
+        if processe_query_docs:
+            query_docs = [processor.clean({"text": query_doc})["text"] for query_doc in query_docs]
+
+        _, _, candidate_id_matrix = self.get_candidates(
             query_docs=query_docs, top_k=top_k_candidates, index=index, filters=filters
         )
 
-        retrieve_results = {}
+        retrieve_results = []
 
-        for idx, query_doc in enumerate(query_docs):
+        for idx, query_doc in enumerate(tqdm(query_docs, desc ="Retrieving.....  ")):
             candidate_ids = [
                 candidate_id
                 for candidate_id in candidate_id_matrix[idx]
                 if candidate_id >= 0
             ]
+
             retrieve_result, score = self._calc_scores_for_candidates(
                 query_doc=query_doc, candidate_ids=candidate_ids
             )
-            retrieve_results[query_doc] = {
+
+            retrieve_results.append({
+                "query_docs": query_doc,
                 "retrieve_result": retrieve_result,
                 "similarity_score": round(score[0], 5),
-            }
+            })
+
+        return retrieve_results
+
+    def sequential_retrive(self, query_docs, meta_docs, top_k_candidates=10, processe_query_docs=True, index=None, filters=None):
+        """[summary]
+
+        Args:
+            query_docs ([type]): [description]
+            meta_docs ([type]): [description]
+            top_k_candidates (int, optional): [description]. Defaults to 10.
+            processe_query_docs (bool, optional): [description]. Defaults to True.
+            index ([type], optional): [description]. Defaults to None.
+            filters ([type], optional): [description]. Defaults to None.
+
+        Returns:
+            [type]: [description]
+        """
+        processor = ViPreProcessor()
+        retrieve_results = []
+        for idx, query_doc in enumerate(tqdm(query_docs, desc ="Sequential retrieving.....  ")):
+
+            if processe_query_docs:
+                doc = processor.clean({"text": query_doc})
+            else:
+                doc = {"text": query_doc}
+
+            query_emb, _, candidate_id_matrix = self.get_candidates(
+                                    query_docs=[doc["text"]],
+                                    top_k=top_k_candidates,
+                                    index=index,
+                                    filters=filters
+                                    )
+            candidate_ids = [
+                candidate_id
+                for candidate_id in candidate_id_matrix[0]
+                if candidate_id >= 0
+            ]
+
+            retrieve_result, score = self._calc_scores_for_candidates(
+                query_doc=query_doc, candidate_ids=candidate_ids
+            )
+            retrieve_results.append({
+                "query_docs": query_doc,
+                "retrieve_result": retrieve_result,
+                "similarity_score": round(score[0], 5),
+            })
+
+            doc['embedding'] = query_emb[0]
+            meta = meta_docs[idx]
+            for m in meta.keys():
+                if isinstance(meta[m], list):
+                    meta[m] = "|".join(meta[m])
+
+            doc["meta"] = meta
+
+            self.document_store.write_documents([doc])
 
         return retrieve_results
