@@ -142,6 +142,10 @@ class SQLDocumentStore(BaseDocumentStore):
         sorted_documents = sorted(documents, key=lambda doc: vector_ids.index(doc.meta["vector_id"]))  # type: ignore
         return sorted_documents
 
+    def get_documents_by_sim_threshold(self, threshold: float = 0.90) -> List[Document]:
+        """Fetch documents by specifying a threshold to filter the similarity scores in meta data"""
+        pass
+
     def get_all_documents(
         self,
         index: Optional[str] = None,
@@ -276,12 +280,7 @@ class SQLDocumentStore(BaseDocumentStore):
             self.session.query(DocumentORM).filter(
                 DocumentORM.id.in_(chunk_map), DocumentORM.index == index
             ).update(
-                {
-                    DocumentORM.vector_id: case(
-                        chunk_map,
-                        value=DocumentORM.id,
-                    )
-                },
+                {DocumentORM.vector_id: case(chunk_map, value=DocumentORM.id,)},
                 synchronize_session=False,
             )
             try:
@@ -322,6 +321,12 @@ class SQLDocumentStore(BaseDocumentStore):
 
         count = query.count()
         return count
+
+    def get_document_ids(self,) -> List[str]:
+        """
+        Return the list of document ids in the DocumentStore.
+        """
+        pass
 
     def _convert_sql_row_to_document(self, row) -> Document:
         document = Document(
