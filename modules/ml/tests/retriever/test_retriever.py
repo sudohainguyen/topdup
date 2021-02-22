@@ -59,12 +59,13 @@ def test_retriever_with_database():
 
     print("Retrieving")
 
-    result = retriever.retrieve([input_doc], top_k_candidates=10)
+    result = retriever.batch_retrieve([input_doc], top_k_candidates=10)
     print(
-        " ".join(result[input_doc]["retrieve_result"].split(" ")[:50])
+        " ".join(result[0]["retrieve_result"].split(" ")[:50])
     )  # print the retrieved doc
-    assert result[input_doc]["retrieve_result"] == expected_text_result
-    assert result[input_doc]["similarity_score"] == expected_score_result
+    assert result[0]["query_docs"] == input_doc
+    assert result[0]["retrieve_result"] == expected_text_result
+    assert result[0]["similarity_score"] == expected_score_result
 
 
 if __name__ == "__main__":

@@ -12,6 +12,7 @@ class Document:
         score: Optional[float] = None,
         meta: Dict[str, Any] = None,
         embedding: Optional[np.array] = None,
+        vector_id: str = None,
     ):
         """
         Object used to represent documents / passages in a standardized way within modules.ml.
@@ -40,6 +41,7 @@ class Document:
         self.score = score
         self.meta = meta or {}
         self.embedding = embedding
+        self.vector_id = vector_id
 
     def to_dict(self, field_map={}):
         inv_field_map = {v: k for k, v in field_map.items()}

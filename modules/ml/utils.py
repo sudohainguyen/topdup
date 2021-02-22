@@ -85,7 +85,7 @@ def convert_labels_to_squad(labels_file: str):
             doc = DocumentORM.query.get(label["document_id"])
 
             assert (
-                doc.text[label["start_offset"] : label["end_offset"]]
+                doc.text[label["start_offset"]: label["end_offset"]]
                 == label["selected_text"]
             )
 

@@ -139,7 +139,8 @@ class SQLDocumentStore(BaseDocumentStore):
             for row in query.all():
                 documents.append(self._convert_sql_row_to_document(row))
 
-        sorted_documents = sorted(documents, key=lambda doc: vector_ids.index(doc.meta["vector_id"]))  # type: ignore
+        # sorted_documents = sorted(documents, key=lambda doc: vector_ids.index(doc.meta["vector_id"]))  # type: ignore
+        sorted_documents = sorted(documents, key=lambda doc: vector_ids.index(doc.vector_id))
         return sorted_documents
 
     def get_documents_by_sim_threshold(self, threshold: float = 0.90) -> List[Document]:
@@ -220,6 +221,7 @@ class SQLDocumentStore(BaseDocumentStore):
         index = index or self.index
         if len(documents) == 0:
             return
+
         # Make sure we comply to Document class format
         if isinstance(documents[0], dict):
             document_objects = [
@@ -231,10 +233,12 @@ class SQLDocumentStore(BaseDocumentStore):
         for i in range(0, len(document_objects), self.batch_size):
             for doc in document_objects[i : i + self.batch_size]:
                 meta_fields = doc.meta or {}
-                vector_id = meta_fields.get("vector_id")
+                # vector_id = meta_fields.get("vector_id")
+                vector_id = doc.vector_id
                 meta_orms = [
                     MetaORM(name=key, value=value) for key, value in meta_fields.items()
                 ]
+
                 doc_orm = DocumentORM(
                     id=doc.id,
                     text=doc.text,
@@ -242,12 +246,14 @@ class SQLDocumentStore(BaseDocumentStore):
                     meta=meta_orms,
                     index=index,
                 )
+
                 if self.update_existing_documents:
                     # First old meta data cleaning is required
                     self.session.query(MetaORM).filter_by(document_id=doc.id).delete()
                     self.session.merge(doc_orm)
                 else:
                     self.session.add(doc_orm)
+
             try:
                 self.session.commit()
             except Exception as ex:
@@ -333,7 +339,8 @@ class SQLDocumentStore(BaseDocumentStore):
             id=row.id, text=row.text, meta={meta.name: meta.value for meta in row.meta}
         )
         if row.vector_id:
-            document.meta["vector_id"] = row.vector_id
+            # document.meta["vector_id"] = row.vector_id
+            document.vector_id = row.vector_id
         return document
 
     def query_by_embedding(
