@@ -33,7 +33,7 @@ class FAISSDocumentStore(SQLDocumentStore):
     def __init__(
         self,
         sql_url: str = "postgresql+psycopg2://",
-        index_buffer_size: int = 10_000,
+        index_buffer_size: int = 10000,
         vector_dim: int = 128,
         faiss_index_factory_str: str = "Flat",
         faiss_index=None,
@@ -91,6 +91,7 @@ class FAISSDocumentStore(SQLDocumentStore):
             ):  # enable reconstruction of vectors for inverted index
                 self.faiss_index.set_direct_map_type(faiss.DirectMap.Hashtable)
 
+        self.sql_url = sql_url
         self.index_buffer_size = index_buffer_size
         self.return_embedding = return_embedding
         if similarity == "dot_product":
@@ -232,7 +233,7 @@ class FAISSDocumentStore(SQLDocumentStore):
             embeddings = [
                 doc.embedding for doc in documents[i : i + self.index_buffer_size]
             ]
-            embeddings = np.array(embeddings, dtype="float32")
+            embeddings = np.ascontiguousarray(embeddings, dtype="float32")
             self.faiss_index.add(embeddings)
 
             for doc in tqdm(documents[i : i + self.index_buffer_size]):
@@ -326,7 +327,7 @@ class FAISSDocumentStore(SQLDocumentStore):
                 "No index exists. Use 'update_embeddings()` to create an index."
             )
 
-        query_emb = query_emb.astype(np.float32)
+        query_emb = np.ascontiguousarray(query_emb, dtype="float32")
         return self.faiss_index.search(query_emb, top_k)
 
     def query_docs_by_embedding(
@@ -399,7 +400,7 @@ class FAISSDocumentStore(SQLDocumentStore):
         cls,
         faiss_file_path: Union[str, Path],
         sql_url: str,
-        index_buffer_size: int = 10_000,
+        index_buffer_size: int = 10000,
     ):
         """
         Load a saved FAISS index from a file and connect to the SQL database.

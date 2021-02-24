@@ -140,7 +140,9 @@ class SQLDocumentStore(BaseDocumentStore):
                 documents.append(self._convert_sql_row_to_document(row))
 
         # sorted_documents = sorted(documents, key=lambda doc: vector_ids.index(doc.meta["vector_id"]))  # type: ignore
-        sorted_documents = sorted(documents, key=lambda doc: vector_ids.index(doc.vector_id))
+        sorted_documents = sorted(
+            documents, key=lambda doc: vector_ids.index(doc.vector_id)
+        )
         return sorted_documents
 
     def get_documents_by_sim_threshold(self, threshold: float = 0.90) -> List[Document]:

@@ -151,3 +151,4 @@ tags
 .vscode/
 *.db
 *.pkl
+*.bin*
