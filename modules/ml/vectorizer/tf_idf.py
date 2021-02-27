@@ -21,6 +21,7 @@ class TfidfDocVectorizer(DocVectorizerBase):
         self.vectorizer = TfidfVectorizer(max_features=vector_dim, **kwargs)
         # Set is_trained = True if vectorizer is trained, is_trained = False
         self.is_trained = False
+        self.vector_dim = vector_dim
 
     def fit(self, train_documents: list = None):
         """Fit `train_documents` into the tf-idf and return tfidf vectorizer.

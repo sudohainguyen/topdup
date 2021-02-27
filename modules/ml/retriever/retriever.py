@@ -2,7 +2,6 @@ import logging
 from typing import List
 
 import numpy as np
-from sqlalchemy.sql.sqltypes import Boolean
 from tqdm import tqdm
 
 from modules.ml.document_store.faiss import FAISSDocumentStore
@@ -34,32 +33,59 @@ class Retriever:
         self.candidate_vectorizer = candidate_vectorizer
         self.retriever_vectorizer = retriever_vectorizer
 
+        if not self.document_store:
+            raise ValueError(
+                "Document store cannot be None."
+                "Try to set document_store to a DocumentStore object again ..."
+            )
+
+        self.index_vector_dim = self.document_store.vector_dim
+
+        if self.candidate_vectorizer is not None and \
+            self.index_vector_dim != self.candidate_vectorizer.vector_dim:
+            raise ValueError(
+                "index_vector_dim must be the same with dimention vector of candidate vectorizer."
+                )
+
+
     def train_candidate_vectorizer(
         self,
-        retrain: Boolean = True,
+        retrain: bool = True,
         training_documents: List[str] = None,
         save_path: str = None,
     ):
         """Train vectorizer for getting candidates phase
 
         Args:
-            retrain (Boolean): Retrain or load saved vectorizer. Defaults to True.
+            retrain (bool): Retrain or load saved vectorizer. Defaults to True.
             training_documents (List[str]): Training documents for vectorizer. Defaults to None.
             save_path (str): Path to save paramenters of vectorizer model. Defaults to None.
         """
 
         if not retrain:
-            self.candidate_vectorizer = self.candidate_vectorizer.load(save_path)
+            self.candidate_vectorizer = DocVectorizerBase.load(save_path)
+            if self.index_vector_dim != self.candidate_vectorizer.vector_dim:
+                raise ValueError(
+                    "index_vector_dim must be the same with dimention vector of candidate vectorizer."
+                    )
             return
 
-        if not training_documents or len(training_documents):
+        if not self.candidate_vectorizer:
+            raise ValueError(
+                "Candidate vectorizer cannot be None."
+                "Try to set candidate_vectorizer to a DocVectorizerBase object..."
+            )
+
+        if not training_documents or len(training_documents) == 0:
             self.training_documents = [
                 document.text for document in self.document_store.get_all_documents()
             ]
 
             if not self.training_documents or len(self.training_documents) == 0:
-                logger.warning("Fit method called with empty DocumentStore")
-                return
+                raise ValueError(
+                    "Fit method can not be called with empty DocumentStore"
+                                        " and empty training docuents"
+                    )
         else:
             self.training_documents = training_documents
 
@@ -72,30 +98,38 @@ class Retriever:
 
     def train_retriever_vectorizer(
         self,
-        retrain: Boolean = True,
+        retrain: bool = True,
         training_documents: List[str] = None,
         save_path: str = None,
     ):
         """Train vectorizer for final retrieve phase
 
         Args:
-            retrain (Boolean): Retrain or load saved vectorizer. Defaults to True.
+            retrain (bool): Retrain or load saved vectorizer. Defaults to True.
             training_documents (List[str]): Training documents for vectorizer. Defaults to None.
             save_path (str): Path to save paramenters of vectorizer model. Defaults to None.
         """
 
         if not retrain:
-            self.retriever_vectorizer = self.retriever_vectorizer.load(save_path)
+            self.retriever_vectorizer = DocVectorizerBase.load(save_path)
             return
 
-        if not training_documents or len(training_documents):
+        if not self.retriever_vectorizer:
+            raise ValueError(
+                "Retriver vectorizer cannot be None"
+                " Try to set retriever_vectorizer to a DocVectorizerBase object..."
+            )
+
+        if not training_documents or len(training_documents) == 0:
             self.training_documents = [
                 document.text for document in self.document_store.get_all_documents()
             ]
 
             if not self.training_documents or len(self.training_documents) == 0:
-                logger.warning("Fit method called with empty DocumentStore")
-                return
+                raise ValueError(
+                    "Fit method can not be called with empty DocumentStore"
+                                            " and empty training docuents"
+                    )
         else:
             self.training_documents = training_documents
 
@@ -107,17 +141,21 @@ class Retriever:
             self.retriever_vectorizer.save(save_path)
 
     def update_embeddings(
-        self, retrain: Boolean = True, save_path: str = None, sql_url: str = None
+        self, retrain: bool = True, save_path: str = None, sql_url: str = None
     ):
         """Update embeddings of documents with candidate vectorizer to `document_store`."""
-
         if retrain:
+            if not self.candidate_vectorizer.is_trained:
+                raise ValueError("Candidate vectorizer is not trained yet."
+                                " Try to call train_candidate_vectorizer first")
+
             self.document_store.update_embeddings(self.candidate_vectorizer)
-            self.document_store.save(file_path=save_path)
-        else:
-            self.document_store = self.document_store.load(
-                faiss_file_path=save_path, sql_url=sql_url
-            )
+            if save_path:
+                self.document_store.save(file_path=save_path)
+        # else:
+        #     self.document_store = FAISSDocumentStore.load(
+        #         faiss_file_path=save_path, sql_url=sql_url
+        #     )
 
     def get_candidates(
         self, query_docs: List[str], top_k: int = 10, index: str = None, filters=None
@@ -132,6 +170,10 @@ class Retriever:
             tuple: Return a tuple of score_matrix and vector_id_matrix (top_k)
                              that are most relevant to each query_doc
         """
+        if not self.candidate_vectorizer.is_trained:
+            raise ValueError("Candidate vectorizer is not trained yet."
+                             "Try to call train_candidate_vectorizer first")
+
         query_embs = self.candidate_vectorizer.transform(query_docs)
         score_matrix, vector_id_matrix = self.document_store.query_ids_by_embedding(
             query_emb=query_embs, filters=filters, top_k=top_k, index=index
@@ -149,6 +191,10 @@ class Retriever:
         Returns:
             [type]: [description]
         """
+        if not self.retriever_vectorizer.is_trained:
+            raise ValueError("Retriever vectorizer is not trained yet."
+                             " Try to call train_retriever_vectorizer first")
+
         query_emb = self.retriever_vectorizer.transform([query_doc])
         candidate_ids = list(map(str, candidate_ids))
 
@@ -185,8 +231,14 @@ class Retriever:
         Returns:
             [type]: [description]
         """
-        processor = ViPreProcessor()
+        if not self.document_store.is_synchronized():
+            raise ValueError (
+            "Faiss_index and database haven't been synchronized yet."
+            " Please, call update_embeddings methods first!"
+        )
+
         if processe_query_docs:
+            processor = ViPreProcessor()
             query_docs = [
                 processor.clean({"text": query_doc})["text"] for query_doc in query_docs
             ]
@@ -218,10 +270,10 @@ class Retriever:
 
         return retrieve_results
 
-    def sequential_retrive(
+    def sequential_retrieve(
         self,
         query_docs,
-        meta_docs,
+        meta_docs=None,
         top_k_candidates=10,
         processe_query_docs=True,
         index=None,
@@ -240,13 +292,19 @@ class Retriever:
         Returns:
             [type]: [description]
         """
-        processor = ViPreProcessor()
+        if not self.document_store.is_synchronized():
+            raise ValueError (
+            "Faiss_index and database haven't been synchronized yet."
+            " Please, call update_embeddings methods first!"
+        )
+
         retrieve_results = []
         for idx, query_doc in enumerate(
             tqdm(query_docs, desc="Sequential retrieving.....  ")
         ):
 
             if processe_query_docs:
+                processor = ViPreProcessor()
                 doc = processor.clean({"text": query_doc})
             else:
                 doc = {"text": query_doc}
@@ -275,7 +333,12 @@ class Retriever:
             )
 
             doc["embedding"] = query_emb[0]
-            meta = meta_docs[idx]
+
+            if meta_docs and idx < len(meta_docs):
+                meta = meta_docs[idx]
+            else:
+                meta = {}
+
             for m in meta.keys():
                 if isinstance(meta[m], list):
                     meta[m] = "|".join(meta[m])

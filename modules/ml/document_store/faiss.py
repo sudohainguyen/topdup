@@ -242,6 +242,16 @@ class FAISSDocumentStore(SQLDocumentStore):
             self.update_vector_ids(vector_id_map, index=index)
             print("update")
 
+    def is_synchronized(self) -> bool:
+        """[summary]
+
+        Raises:
+            ValueError: [description]
+        """
+        if self.faiss_index.ntotal != self.get_document_count():
+            return False
+        return True
+
     def get_all_documents(
         self, index: Optional[str] = None, return_embedding: Optional[bool] = None
     ) -> List[Document]:
