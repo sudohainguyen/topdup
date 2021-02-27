@@ -31,3 +31,7 @@ more_itertools
 networkx
 vncorenlp
 jsonpickle
+
+# for unit test
+pytest
+pytest-mock
