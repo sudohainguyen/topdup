@@ -163,7 +163,7 @@ class Retriever:
             1
         ]  # 0 location is the query_doc itself
 
-        return candidate_text_docs[highest_score[0]], highest_score[1]
+        return candidate_ids[1], highest_score[1]
 
     def batch_retrieve(
         self,
