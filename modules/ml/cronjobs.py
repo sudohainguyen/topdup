@@ -1,6 +1,6 @@
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import schedule
 
@@ -46,10 +46,16 @@ def update_local_db():
             logging.error('DB initialization failed, quit local_update...')
             return
 
-    new_ids = remote_doc_store.get_document_ids()
+    new_ids = remote_doc_store.get_document_ids(from_time=datetime.now() - timedelta(minutes=1))  # noqa
     if not new_ids:
         logging.info(f'No new updates in local db at {datetime.now()}')
         return
+
+    local_ids = local_doc_store.get_document_ids()
+
+    # filter existing ids in local out of recent updated ids from remote db
+
+    new_ids = [_id for _id in new_ids if _id not in local_ids]
 
     docs = remote_doc_store.get_document_by_id(new_ids)
     logging.info(f'Retrieved {len(docs)} at {datetime.now()}')
@@ -91,7 +97,13 @@ def update_remote_db():
     3. Update meta data of documents on local db to remote db
     4. Clear local db
     """
-    remote_doc_store.update_embeddings()
+    vectorizer = None
+    remote_doc_store.update_embeddings(vectorizer)
+    logging.info('Remote embeddings and vector ids updated')
+
+    docs = local_doc_store.get_all_documents()
+    remote_doc_store.write_documents(docs)
+    logging.info('Uploaded local to remote db')
 
 
 if __name__ == '__main__':
