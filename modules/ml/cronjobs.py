@@ -105,6 +105,8 @@ def update_remote_db():
     remote_doc_store.write_documents(docs)
     logging.info('Uploaded local to remote db')
 
+    local_doc_store.delete_all_documents()
+
 
 if __name__ == '__main__':
     schedule.every().minute.do(update_local_db)
