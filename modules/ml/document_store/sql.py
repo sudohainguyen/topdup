@@ -345,17 +345,19 @@ class SQLDocumentStore(BaseDocumentStore):
         """
         Return the list of document ids in the DocumentStore.
         """
-        if not from_time:
-            from_time = datetime.datetime(1970, 1, 1)
-        if not to_time:
-            to_time = datetime.datetime.now()
-        query = self.session.query(DocumentORM.id,
-                                   DocumentORM.index,
-                                   DocumentORM.updated).filter(
-            DocumentORM.updated > from_time,
-            DocumentORM.updated <= to_time,
-            DocumentORM.index == index)
-
+        if not from_time and not to_time:  # get all
+            query = self.session.query(DocumentORM.id).filter_by(index=index)
+        else:
+            if not from_time:
+                from_time = datetime.datetime(1970, 1, 1)
+            if not to_time:
+                to_time = datetime.datetime.now()
+            query = self.session.query(DocumentORM.id,
+                                       DocumentORM.index,
+                                       DocumentORM.updated).filter(
+                DocumentORM.updated > from_time,
+                DocumentORM.updated <= to_time,
+                DocumentORM.index == index)
         return [row.id for row in query.all()]
 
     def _convert_sql_row_to_document(self, row) -> Document:

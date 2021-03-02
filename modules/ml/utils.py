@@ -8,6 +8,7 @@ from typing import Any, Dict, List
 
 import pandas as pd
 
+from modules.ml.document_store.faiss import FAISSDocumentStore
 from modules.ml.document_store.sql import DocumentORM
 
 logger = logging.getLogger(__name__)
@@ -124,3 +125,21 @@ def random_string(length: int = 10) -> str:
     return "".join(
         [random.choice(string.ascii_letters + string.digits) for n in range(length)]
     )
+
+
+def get_local_connection(db_file: str):
+    try:
+        conn = FAISSDocumentStore(sql_url=f"sqlite:///{db_file}")
+        return conn
+    except Exception as e:
+        logging.error(e)
+        return None
+
+
+def get_remote_connection(uri: str):
+    try:
+        conn = FAISSDocumentStore(sql_url=uri)
+        return conn
+    except Exception as e:
+        logging.error(e)
+        return None
