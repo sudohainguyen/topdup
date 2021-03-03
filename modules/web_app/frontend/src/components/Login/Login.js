@@ -5,7 +5,7 @@ import "./Login.css"
 import AuthService from "./Login.service"
 
 
-export default function Login({ setToken, setUserData }) {
+export default function Login({ setUserData }) {
   const [username, setUsername] = useState()
   const [password, setPassword] = useState()
 
@@ -15,10 +15,8 @@ export default function Login({ setToken, setUserData }) {
   const loginResponseHandler = (result) => {
     const httpCode = result.code
     if (httpCode !== 200) throw (result.message)
-    const token = result.data.accessToken
     if (mounted.current) {
-      setToken(token)
-      setUserData(result.data.user)
+      setUserData(result.data)
     }
   }
 

@@ -28,9 +28,8 @@ class SimilarityReport extends Component {
   };
 
   getData = () => {
-    const userDataStr = sessionStorage.getItem("userData")
-    const userData = JSON.parse(userDataStr)
-    const userId = userData && userData.id
+    const user = this.state.userData && this.state.userData.user
+    const userId = user && user.id
     if (userId) {
       this.setState({ loading: true })
       this.simReportsService.getSimilarityRecords()
