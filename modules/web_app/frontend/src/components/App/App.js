@@ -8,40 +8,24 @@ import Login from "../Login/Login"
 import Preferences from "../Preferences/Preferences"
 import SimilarityReport from "../Similarity-Report/Similarity-Report"
 import "./App.css"
-import useToken from "./useToken"
 import useUserData from './useUserData'
 
 function App() {
-  const { token, setToken } = useToken()
   const { userData, setUserData } = useUserData()
+  const token = userData && userData.accessToken
 
   return (
     <BrowserRouter>
       <div className="App">
-        <NavigationBar isLoggedIn={token ? true : false} />
+        <NavigationBar setUserData={setUserData} isLoggedIn={token ? true : false} />
         <div className="page-content">
           <Switch>
-            <Route
-              exact
-              path="/"
-              component={() => {
-                return !token ? <Login setToken={setToken} setUserData={setUserData} /> : <Dashboard />
-              }}
-            />
-            <Route exact path="/sign-in" component={() => <Login setToken={setToken} setUserData={setUserData} />} />
+            <Route exact path="/" component={() => !token ? <Login setUserData={setUserData} /> : <Dashboard />} />
+            <Route exact path="/sign-in" component={() => <Login setUserData={setUserData} />} />
             <Route exact path="/dashboard" component={Dashboard} />
             <Route exact path="/preferences" component={Preferences} />
-            <Route
-              exact
-              path="/similarity-reports"
-              userData={userData}
-              component={SimilarityReport}
-            />
-            <Route
-              exact
-              path="/similarity-reports/:id"
-              component={SimilarityReport}
-            />
+            <Route exact path="/similarity-reports" component={() => <SimilarityReport userData={userData} />} />
+            <Route exact path="/similarity-reports/:id" component={() => <SimilarityReport userData={userData} />} />
           </Switch>
         </div>
         <Footer />

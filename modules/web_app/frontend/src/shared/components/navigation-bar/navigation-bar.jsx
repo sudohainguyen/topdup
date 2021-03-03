@@ -1,10 +1,15 @@
-import React from "react";
-import "./navigation-bar.css";
-import { Navbar, Nav, Container, NavDropdown } from "react-bootstrap";
-import { useLocation } from "react-router-dom";
+import React from "react"
+import { Container, Nav, Navbar, NavDropdown } from "react-bootstrap"
+import { useLocation } from "react-router-dom"
+import "./navigation-bar.css"
 
-const NavigationBar = ({ isLoggedIn }) => {
-  const location = useLocation();
+const NavigationBar = ({ isLoggedIn, setUserData }) => {
+  const location = useLocation()
+
+  const logOut = () => {
+    setUserData()
+    window.location.assign("/")
+  }
 
   const loggedInItems = (
     <>
@@ -15,9 +20,13 @@ const NavigationBar = ({ isLoggedIn }) => {
         <NavDropdown.Divider />
         <NavDropdown.Item href="#">Separated link</NavDropdown.Item>
       </NavDropdown>
-      <Nav.Link href="#">Logout</Nav.Link>
+      <Nav.Link href="#">
+        <button className="btn btn-outline-secondary bg-sm" onClick={logOut}>
+          Thoát
+        </button>
+      </Nav.Link>
     </>
-  );
+  )
 
   const notLoggedInItems = (
     <>
@@ -28,9 +37,9 @@ const NavigationBar = ({ isLoggedIn }) => {
         <button className="btn btn-outline-secondary btn-sm">Đăng ký</button>
       </Nav.Link>
     </>
-  );
+  )
 
-  const userRelatedNavItems = isLoggedIn ? loggedInItems : notLoggedInItems;
+  const userRelatedNavItems = isLoggedIn ? loggedInItems : notLoggedInItems
 
   return (
     <Navbar expand="lg" fixed="top">
@@ -50,7 +59,7 @@ const NavigationBar = ({ isLoggedIn }) => {
         </Navbar.Collapse>
       </Container>
     </Navbar>
-  );
-};
+  )
+}
 
-export default NavigationBar;
+export default NavigationBar
