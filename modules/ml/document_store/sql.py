@@ -147,6 +147,15 @@ class SQLDocumentStore(BaseDocumentStore):
 
     def get_documents_by_sim_threshold(self, threshold: float = 0.90) -> List[Document]:
         """Fetch documents by specifying a threshold to filter the similarity scores in meta data"""
+
+        matched_sim_score = self.session.query(MetaORM).filter(
+            MetaORM.name == "sim_score", MetaORM.value >= threshold
+        )
+        for row in matched_sim_score.all():
+            query = self.session.query(MetaORM).filter(
+                MetaORM.document_id == row.document_id
+            )
+            print(query.all())
         pass
 
     def get_all_documents(
@@ -288,7 +297,12 @@ class SQLDocumentStore(BaseDocumentStore):
             self.session.query(DocumentORM).filter(
                 DocumentORM.id.in_(chunk_map), DocumentORM.index == index
             ).update(
-                {DocumentORM.vector_id: case(chunk_map, value=DocumentORM.id,)},
+                {
+                    DocumentORM.vector_id: case(
+                        chunk_map,
+                        value=DocumentORM.id,
+                    )
+                },
                 synchronize_session=False,
             )
             try:
@@ -330,7 +344,9 @@ class SQLDocumentStore(BaseDocumentStore):
         count = query.count()
         return count
 
-    def get_document_ids(self,) -> List[str]:
+    def get_document_ids(
+        self,
+    ) -> List[str]:
         """
         Return the list of document ids in the DocumentStore.
         """

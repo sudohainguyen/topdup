@@ -3,11 +3,14 @@ from typing import Optional
 from pydantic import BaseModel
 
 
-class Entry(BaseModel):
-    threshold: int
+class AllPairsEntry(BaseModel):
+    threshold: float
 
 
-class QueryResult(BaseModel):
+class CompareEntry(BaseModel):
+    pairs: list[str]
+
+
+class Result(BaseModel):
     message: str
-    result: str = None
-    time: Optional[float] = None
+    result: list = None
