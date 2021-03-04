@@ -153,8 +153,9 @@ class Retriever:
         candidate_ids = list(map(str, candidate_ids))
 
         candidate_docs = self.document_store.get_documents_by_vector_ids(candidate_ids)
-        candidate_text_docs = [candidate_doc.text for candidate_doc in candidate_docs]
-        candidate_embs = self.retriever_vectorizer.transform(candidate_text_docs)
+        candidate_docs_text = [candidate_doc.text for candidate_doc in candidate_docs]
+        candidate_docs_id = [candidate_doc.id for candidate_doc in candidate_docs]
+        candidate_embs = self.retriever_vectorizer.transform(candidate_docs_text)
 
         scores = candidate_embs.dot(query_emb.T)
         idx_scores = [(idx, score) for idx, score in enumerate(scores)]
@@ -163,7 +164,7 @@ class Retriever:
             1
         ]  # 0 location is the query_doc itself
 
-        return candidate_text_docs[highest_score[0]], highest_score[1]
+        return candidate_docs_id[highest_score[0]], highest_score[1]
 
     def batch_retrieve(
         self,
