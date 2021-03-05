@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-
+import pickle
 
 class DocVectorizerBase(ABC):
     @abstractmethod
@@ -19,6 +19,9 @@ class DocVectorizerBase(ABC):
         pass
 
     @classmethod
-    @abstractmethod
     def load(cls, model_path):
-        pass
+        vectorizer = pickle.load(open(model_path, "rb"))
+        print(type(vectorizer))
+
+        return vectorizer
+
