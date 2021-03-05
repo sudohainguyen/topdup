@@ -1,16 +1,16 @@
-from typing import Optional
+from typing import List
 
 from pydantic import BaseModel
 
 
 class AllPairsEntry(BaseModel):
-    threshold: float
+    threshold: float = 0.90
 
 
 class CompareEntry(BaseModel):
-    pairs: list[str]
+    pairs: List[str]
 
 
-class Result(BaseModel):
+class QueryResult(BaseModel):
     message: str
-    result: list = None
+    result: List[dict] = None

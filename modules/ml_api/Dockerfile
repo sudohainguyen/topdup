@@ -19,7 +19,7 @@ RUN mkdir -p /var/app/modules/ml/document_store
 COPY modules/ml_api /var/app/modules/ml_api
 COPY modules/ml/document_store/ /var/app/modules/ml/document_store
 COPY modules/ml/schema.py /var/app/modules/ml/schema.py
-COPY ./Pipfile /var/app/modules/ml_api/Pipfile
+COPY ./requirements.txt /var/app/modules/ml_api/requirements.txt
 
 # Install system dependencies
 RUN apt-get update -y
@@ -37,11 +37,10 @@ RUN apt-get install -y --no-install-recommends \
 
 # Install environment dependencies
 RUN pip3 install --upgrade pip 
-RUN pip3 install pipenv gunicorn uvloop httptools
 
 # Install project dependencies
 WORKDIR /var/app/modules/ml_api
-RUN pipenv install --skip-lock --system
+RUN pip3 install -r requirements.txt
 
 # Run the API
 EXPOSE $PORT

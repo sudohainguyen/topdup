@@ -57,9 +57,18 @@ def find_all_pairs(entry: AllPairsEntry, response: Response):
         "message": "Successfully requested ML-API [all_pairs]",
         "result": [
             {
-                "A": {"title": "John", "Author": "Nguyen", "URL": "www.xxx.com"},
-                "B": {"title": "John2", "Author": "Le", "URL": "www.yyy.com"},
-                "score": 0.95,
+                "id": "concat articleAId & articleBId",
+                "articleA": "title of articleA",
+                "articleAId": "id of articleA",
+                "domainA": "domain of articleA",
+                "authorA": "author of articleA",
+                "createdDateA": "created date of articleA",
+                "articleB": "title of articleB",
+                "articleBId": "id of articleB",
+                "domainB": "domain of articleB",
+                "authorB": "author of articleB",
+                "createdDateB": "created date of articleB",
+                "simScore": "similarity score between articleA & articleB",
             }
         ],
     }
