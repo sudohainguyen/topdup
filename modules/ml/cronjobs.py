@@ -13,7 +13,7 @@ from modules.ml.vectorizer.tf_idf import TfidfDocVectorizer
 DB_PATH = os.getenv('LOCAL_DB_PATH', 'local.db')
 POSTGRES_URL = os.getenv('POSTGRES_URI', 'localhost:5432')
 CAND_DIM = 768
-RETRV_DIM = 1024
+RTRV_DIM = 1024
 CAND_PATH = os.getenv('CAND_PATH', 'cand.bin')
 RTRV_PATH = os.getenv('RTRV_PATH', 'rtrv.bin')
 IDX_PATH = os.getenv('IDX_PATH', 'index.bin')
@@ -63,28 +63,48 @@ def update_local_db():
     local_doc_store.write_documents(docs)
     logging.info('Stored documents to local db')
 
-    retriever = Retriever(
+    if not os.path.exists(CAND_PATH) or not os.path.exists(RTRV_PATH):
+        logging.critical('Vectorizer models not found, quiting job...')
+        return
+
+    local_retriever = Retriever(
         document_store=local_doc_store,
         candidate_vectorizer=TfidfDocVectorizer(CAND_DIM),
-        retriever_vectorizer=TfidfDocVectorizer(RETRV_DIM)
+        retriever_vectorizer=TfidfDocVectorizer(RTRV_DIM)
+    )
+    remote_retriever = Retriever(
+        document_store=remote_doc_store,
+        candidate_vectorizer=TfidfDocVectorizer(CAND_DIM),
+        retriever_vectorizer=TfidfDocVectorizer(RTRV_DIM)
     )
 
-    retrain_vectorizers = os.path.exists(CAND_PATH)
-    retriever.train_candidate_vectorizer(
-        retrain=retrain_vectorizers, save_path=CAND_PATH)
-    retriever.train_retriever_vectorizer(
-        retrain=retrain_vectorizers, save_path=RTRV_PATH)
-    logging.info('Init vectorizers')
+    remote_retriever.train_candidate_vectorizer(
+        retrain=False, save_path=CAND_PATH)
+    remote_retriever.train_retriever_vectorizer(
+        retrain=False, save_path=RTRV_PATH)
+
+    local_retriever.train_candidate_vectorizer(
+        retrain=False, save_path=CAND_PATH)
+    local_retriever.train_retriever_vectorizer(
+        retrain=False, save_path=RTRV_PATH)
+    logging.info('Vectorizers loaded')
 
     reindex = os.path.exists(IDX_PATH)
-    retriever.update_embeddings(
-        retrain=reindex, save_path=IDX_PATH, sql_url=POSTGRES_URL)
+    local_retriever.update_embeddings(
+        retrain=reindex, save_path=IDX_PATH, sql_url=DB_PATH)
     logging.info('Embeddings updated')
 
-    results = retriever.batch_retrieve(docs)
-    for _id, res in zip(new_ids, results):
-        local_doc_store.update_document_meta(_id,
-                                             {'sim_score': res['similarity_score']})
+    local_results = local_retriever.batch_retrieve(docs)
+    remote_result = remote_retriever.batch_retrieve(docs)
+    for _id, l, r in zip(new_ids, local_results, remote_result):
+        local_sim = l.get('similarity_score', 0)
+        remote_sim = r.get('similarity_score', 0)
+        if local_sim > remote_sim:
+            sim_data = {
+                'sim_score': local_sim,
+                'similar_to': l['retrieve_result']
+            }
+            remote_doc_store.update_document_meta(_id, sim_data)
     logging.info('Similarity scores updated into metadata')
 
 
@@ -97,13 +117,14 @@ def update_remote_db():
     3. Update meta data of documents on local db to remote db
     4. Clear local db
     """
-    vectorizer = None
-    remote_doc_store.update_embeddings(vectorizer)
+    remote_retriever = Retriever(
+        document_store=remote_doc_store,
+        candidate_vectorizer=TfidfDocVectorizer(CAND_DIM),
+        retriever_vectorizer=TfidfDocVectorizer(RTRV_DIM)
+    )
+    remote_retriever.train_candidate_vectorizer(retrain=False, save_path=CAND_PATH)
+    remote_retriever.update_embeddings(retrain=True)
     logging.info('Remote embeddings and vector ids updated')
-
-    docs = local_doc_store.get_all_documents()
-    remote_doc_store.write_documents(docs)
-    logging.info('Uploaded local to remote db')
 
     local_doc_store.delete_all_documents()
 
