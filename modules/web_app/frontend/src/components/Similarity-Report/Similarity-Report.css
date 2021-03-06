@@ -45,8 +45,8 @@
 }
 
 .sim-report-row {
-  min-width: 1200px;
-  max-width: 1000px;
+  max-width: 1200px;
+  min-width: 1000px;
   display: flex;
   flex-wrap: wrap;
   margin-right: -15px;
@@ -66,8 +66,8 @@
 }
 
 .sim-header-row {
-  min-width: 1200px;
-  max-width: 1000px;
+  max-width: 1200px;
+  min-width: 1000px;
   display: flex;
   flex-wrap: wrap;
   margin-right: -15px;

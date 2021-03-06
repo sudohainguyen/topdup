@@ -51,8 +51,9 @@ const NavigationBar = ({ isLoggedIn, setUserData }) => {
           <Nav className="mr-auto" activeKey={location.pathname}></Nav>
           <Nav className="topdup-nav-items">
             <Nav.Link href="/home">Trang chủ</Nav.Link>
-            <Nav.Link href="/similarity-reports">DupFinder</Nav.Link>
-            <Nav.Link href="/dup-compare">DupCompare</Nav.Link>
+            <Nav.Link href="/similarity-reports">Dup Reports</Nav.Link>
+            <Nav.Link href="/dup-check">Dup Compare</Nav.Link>
+            <Nav.Link href="/dup-finder">Dup Finder</Nav.Link>
             <Nav.Link href="/about">Về TopDup</Nav.Link>
             {userRelatedNavItems}
           </Nav>

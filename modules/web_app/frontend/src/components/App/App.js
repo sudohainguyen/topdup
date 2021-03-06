@@ -1,3 +1,4 @@
+import 'bootstrap/dist/css/bootstrap.min.css'
 import 'font-awesome/css/font-awesome.min.css'
 import React from "react"
 import { BrowserRouter, Route, Switch } from "react-router-dom"
@@ -6,6 +7,7 @@ import NavigationBar from "../../shared/components/navigation-bar/navigation-bar
 import Dashboard from "../Dashboard/Dashboard"
 import Login from "../Login/Login"
 import Preferences from "../Preferences/Preferences"
+import SimilarityCheck from '../Similarity-Check/Similarity-Check'
 import SimilarityReport from "../Similarity-Report/Similarity-Report"
 import "./App.css"
 import useUserData from './useUserData'
@@ -24,6 +26,7 @@ function App() {
             <Route exact path="/sign-in" component={() => <Login setUserData={setUserData} />} />
             <Route exact path="/dashboard" component={Dashboard} />
             <Route exact path="/preferences" component={Preferences} />
+            <Route exact path="/dup-check" component={() => <SimilarityCheck />} />
             <Route exact path="/similarity-reports" component={() => <SimilarityReport userData={userData} />} />
             <Route exact path="/similarity-reports/:id" component={() => <SimilarityReport userData={userData} />} />
           </Switch>
