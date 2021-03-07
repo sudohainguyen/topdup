@@ -1,3 +1,4 @@
+import datetime
 import itertools
 import logging
 from typing import Any, Dict, List, Optional, Union
@@ -68,7 +69,7 @@ class SQLDocumentStore(BaseDocumentStore):
         index: str = "document",
         label_index: str = "label",
         update_existing_documents: bool = False,
-        batch_size: int = 32766,
+        batch_size: int = 1000,
     ):
         """
         An SQL backed DocumentStore. Currently supports SQLite, PostgreSQL and MySQL backends.
@@ -122,12 +123,14 @@ class SQLDocumentStore(BaseDocumentStore):
             for row in query.all():
                 documents.append(self._convert_sql_row_to_document(row))
 
-        return documents
+        sorted_documents = sorted(documents, key=lambda doc: doc.id)
+        return sorted_documents
 
     def get_documents_by_vector_ids(
         self, vector_ids: List[str], index: Optional[str] = None
     ):
         """Fetch documents by specifying a list of text vector id strings"""
+
         index = index or self.index
 
         documents = []
@@ -147,7 +150,7 @@ class SQLDocumentStore(BaseDocumentStore):
 
     def get_documents_by_sim_threshold(self, threshold: float = 0.90) -> List[Document]:
         """Fetch documents by specifying a threshold to filter the similarity scores in meta data"""
-
+        
         matched_sim_score = self.session.query(MetaORM).filter(
             MetaORM.name == "sim_score", MetaORM.value >= threshold
         )
@@ -156,7 +159,6 @@ class SQLDocumentStore(BaseDocumentStore):
                 MetaORM.document_id == row.document_id
             )
             print(query.all())
-        pass
 
     def get_all_documents(
         self,
@@ -228,7 +230,7 @@ class SQLDocumentStore(BaseDocumentStore):
 
           :return: None
         """
-
+        # TODO handle Iterable type
         index = index or self.index
         if len(documents) == 0:
             return
@@ -297,12 +299,7 @@ class SQLDocumentStore(BaseDocumentStore):
             self.session.query(DocumentORM).filter(
                 DocumentORM.id.in_(chunk_map), DocumentORM.index == index
             ).update(
-                {
-                    DocumentORM.vector_id: case(
-                        chunk_map,
-                        value=DocumentORM.id,
-                    )
-                },
+                {DocumentORM.vector_id: case(chunk_map, value=DocumentORM.id,)},
                 synchronize_session=False,
             )
             try:
@@ -316,11 +313,18 @@ class SQLDocumentStore(BaseDocumentStore):
         """
         Update the metadata dictionary of a document by specifying its string id
         """
-        self.session.query(MetaORM).filter_by(document_id=id).delete()
+        query = self.session.query(MetaORM).filter_by(document_id=id)
+        current_meta = dict()
+        for row in query.all():
+            current_meta.update({row.name: row.value})
+        query.delete()
+
+        meta.update(current_meta)
         meta_orms = [
             MetaORM(name=key, value=value, document_id=id)
             for key, value in meta.items()
         ]
+
         for m in meta_orms:
             self.session.add(m)
         self.session.commit()
@@ -346,18 +350,34 @@ class SQLDocumentStore(BaseDocumentStore):
 
     def get_document_ids(
         self,
+        from_time: datetime = None,
+        to_time: datetime = None,
+        index: Optional[str] = None,
     ) -> List[str]:
         """
         Return the list of document ids in the DocumentStore.
         """
-        pass
+        if not from_time and not to_time:  # get all
+            query = self.session.query(DocumentORM.id).filter_by(index=index)
+        else:
+            if not from_time:
+                from_time = datetime.datetime(1970, 1, 1)
+            if not to_time:
+                to_time = datetime.datetime.now()
+            query = self.session.query(
+                DocumentORM.id, DocumentORM.index, DocumentORM.updated
+            ).filter(
+                DocumentORM.updated > from_time,
+                DocumentORM.updated <= to_time,
+                DocumentORM.index == index,
+            )
+        return [row.id for row in query.all()]
 
     def _convert_sql_row_to_document(self, row) -> Document:
         document = Document(
             id=row.id, text=row.text, meta={meta.name: meta.value for meta in row.meta}
         )
         if row.vector_id:
-            # document.meta["vector_id"] = row.vector_id
             document.vector_id = row.vector_id
         return document
 

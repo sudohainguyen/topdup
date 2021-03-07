@@ -1,5 +1,6 @@
-from abc import ABC, abstractmethod
 import pickle
+from abc import ABC, abstractmethod
+
 
 class DocVectorizerBase(ABC):
     @abstractmethod
@@ -24,4 +25,3 @@ class DocVectorizerBase(ABC):
         print(type(vectorizer))
 
         return vectorizer
-
