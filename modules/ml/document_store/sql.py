@@ -18,6 +18,7 @@ from sqlalchemy import (
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.sql import case, null
+from sqlalchemy.sql.sqltypes import Float
 
 from modules.ml.document_store.base import BaseDocumentStore
 from modules.ml.schema import Document
@@ -150,15 +151,32 @@ class SQLDocumentStore(BaseDocumentStore):
 
     def get_documents_by_sim_threshold(self, threshold: float = 0.90) -> List[Document]:
         """Fetch documents by specifying a threshold to filter the similarity scores in meta data"""
-        
+
+        documents = list()
         matched_sim_score = self.session.query(MetaORM).filter(
-            MetaORM.name == "sim_score", MetaORM.value >= threshold
+            MetaORM.name == "sim_score", MetaORM.value.cast(Float) >= threshold
         )
         for row in matched_sim_score.all():
-            query = self.session.query(MetaORM).filter(
+            query_A = self.session.query(MetaORM).filter(
                 MetaORM.document_id == row.document_id
             )
-            print(query.all())
+            meta_A = {}
+            for row_A in query_A.all():
+                meta_A.update({row_A.name: row_A.value})
+
+            if row.document_id != meta_A["similar_to"]:
+                query_B = self.session.query(MetaORM).filter(
+                    MetaORM.document_id == meta_A["similar_to"]
+                )
+                meta_B = {}
+                for row_B in query_B.all():
+                    meta_B.update({row_B.name: row_B.value})
+
+                document_A = {"document_id": row.document_id, "meta": meta_A}
+                document_B = {"document_id": meta_A["similar_to"], "meta": meta_B}
+                documents.append((document_A, document_B))
+
+        return documents
 
     def get_all_documents(
         self,
@@ -299,7 +317,12 @@ class SQLDocumentStore(BaseDocumentStore):
             self.session.query(DocumentORM).filter(
                 DocumentORM.id.in_(chunk_map), DocumentORM.index == index
             ).update(
-                {DocumentORM.vector_id: case(chunk_map, value=DocumentORM.id,)},
+                {
+                    DocumentORM.vector_id: case(
+                        chunk_map,
+                        value=DocumentORM.id,
+                    )
+                },
                 synchronize_session=False,
             )
             try:
