@@ -1,3 +1,4 @@
+import datetime
 import itertools
 import logging
 from typing import Any, Dict, List, Optional, Union
@@ -121,7 +122,7 @@ class SQLDocumentStore(BaseDocumentStore):
             )
             for row in query.all():
                 documents.append(self._convert_sql_row_to_document(row))
-
+        # TODO: use yield
         return documents
 
     def get_documents_by_vector_ids(
@@ -219,7 +220,7 @@ class SQLDocumentStore(BaseDocumentStore):
 
           :return: None
         """
-
+        # TODO handle Iterable type
         index = index or self.index
         if len(documents) == 0:
             return
@@ -302,11 +303,16 @@ class SQLDocumentStore(BaseDocumentStore):
         """
         Update the metadata dictionary of a document by specifying its string id
         """
-        self.session.query(MetaORM).filter_by(document_id=id).delete()
+        query = self.session.query(MetaORM).filter_by(document_id=id)
+        current_meta = self._convert_sql_row_to_document(query.first()).to_dict()
+        query.delete()
+
+        meta.update(current_meta)
         meta_orms = [
             MetaORM(name=key, value=value, document_id=id)
             for key, value in meta.items()
         ]
+
         for m in meta_orms:
             self.session.add(m)
         self.session.commit()
@@ -330,11 +336,29 @@ class SQLDocumentStore(BaseDocumentStore):
         count = query.count()
         return count
 
-    def get_document_ids(self,) -> List[str]:
+    def get_document_ids(
+        self,
+        from_time: datetime = None,
+        to_time: datetime = None,
+        index: Optional[str] = None
+    ) -> List[str]:
         """
         Return the list of document ids in the DocumentStore.
         """
-        pass
+        if not from_time and not to_time:  # get all
+            query = self.session.query(DocumentORM.id).filter_by(index=index)
+        else:
+            if not from_time:
+                from_time = datetime.datetime(1970, 1, 1)
+            if not to_time:
+                to_time = datetime.datetime.now()
+            query = self.session.query(DocumentORM.id,
+                                       DocumentORM.index,
+                                       DocumentORM.updated).filter(
+                DocumentORM.updated > from_time,
+                DocumentORM.updated <= to_time,
+                DocumentORM.index == index)
+        return [row.id for row in query.all()]
 
     def _convert_sql_row_to_document(self, row) -> Document:
         document = Document(
