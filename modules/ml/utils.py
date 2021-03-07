@@ -127,18 +127,9 @@ def random_string(length: int = 10) -> str:
     )
 
 
-def get_local_connection(db_file: str):
+def get_connection(uri: str, vector_dim: int):
     try:
-        conn = FAISSDocumentStore(sql_url=f"sqlite:///{db_file}")
-        return conn
-    except Exception as e:
-        logging.error(e)
-        return None
-
-
-def get_remote_connection(uri: str):
-    try:
-        conn = FAISSDocumentStore(sql_url=uri)
+        conn = FAISSDocumentStore(sql_url=uri, vector_dim=vector_dim)
         return conn
     except Exception as e:
         logging.error(e)
