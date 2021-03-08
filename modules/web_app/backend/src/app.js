@@ -8,16 +8,8 @@ const cors = require("cors")
 require('dotenv').config()
 export const app = express()
 const port = 5000
-app.use(bodyParser.json())
 app.use(cors())
-export const server = Server(app)
-
-
-// var accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' })
-// app.use(hpp())
-// app.use(xXssProtection());
-// app.use(logger(':method :status :url :date[iso] :response-time', { stream: accessLogStream }));
-
+app.options('*', cors())  // enable pre-flight
 // Add extra config to solve CROS prob.
 // TODO: check if its safe!!!
 app.use(function (req, res, next) {
@@ -25,6 +17,17 @@ app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
   next()
 })
+
+app.use(bodyParser.json())
+
+export const server = Server(app)
+
+// var accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' })
+// app.use(hpp())
+// app.use(xXssProtection());
+// app.use(logger(':method :status :url :date[iso] :response-time', { stream: accessLogStream }));
+
+
 
 app.use("/", routes)
 /* ----------  Errors  ---------- */
