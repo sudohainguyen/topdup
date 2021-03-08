@@ -32,7 +32,7 @@ class SimilarityReport extends Component {
     const userId = user && user.id
     if (userId) {
       this.setState({ loading: true })
-      this.simReportsService.getSimilarityRecords()
+      this.simReportsService.getSimilarityRecords(userId)
         .then(results => {
           this.setState({ loading: false })
           this.setState({ simReports: results })
