@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react"
 import { IconContext } from "react-icons"
 import { FaCheck, FaHashtag, FaTimes } from "react-icons/fa"
+import useUserData from "../App/useUserData"
 import SimReportsService from "./Similarity-Report.service"
 
 export const SimilarityReportList = (props) => {
   const [simReports, setSimReports] = useState({ ...props.simReports })
   const [loading, setLoading] = useState({ ...props.loading })
+  const { userData, setUserData } = useUserData()
   const simReportsService = new SimReportsService()
 
   useEffect(() => setSimReports(props.simReports), [props.simReports])
@@ -29,9 +31,7 @@ export const SimilarityReportList = (props) => {
   }
 
   const applyVote = (simReport, votedOption) => {
-    const userDataStr = sessionStorage.getItem("userData")
-    const userData = JSON.parse(userDataStr)
-    const userId = userData && userData.id
+    const userId = userData && userData.user && userData.user.id
     simReportsService.applyVote(simReport, votedOption, userId)
       .then(result => {
         const updatedSimReport = result.data
