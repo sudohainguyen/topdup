@@ -4,6 +4,7 @@ import logging
 from typing import Any, Dict, List, Optional, Union
 from uuid import uuid4
 
+import edlib
 from sqlalchemy import (
     Boolean,
     Column,
@@ -152,29 +153,53 @@ class SQLDocumentStore(BaseDocumentStore):
     def get_documents_by_sim_threshold(self, threshold: float = 0.90) -> List[Document]:
         """Fetch documents by specifying a threshold to filter the similarity scores in meta data"""
 
+        url_keys = ["url", "href"]
         documents = list()
-        matched_sim_score = self.session.query(MetaORM).filter(
-            MetaORM.name == "sim_score", MetaORM.value.cast(Float) >= threshold
+        meta = self.session.query(MetaORM)
+        document_id_AB = list()
+        document_id_A = meta.filter(
+            MetaORM.name == "sim_score",
+            MetaORM.value.cast(Float) >= threshold,
+            MetaORM.value.cast(Float) < 1,
         )
-        for row in matched_sim_score.all():
-            query_A = self.session.query(MetaORM).filter(
-                MetaORM.document_id == row.document_id
+        for row in document_id_A.all():
+            document_id_B = meta.filter(
+                MetaORM.document_id == row.document_id, MetaORM.name == "similar_to"
             )
-            meta_A = {}
-            for row_A in query_A.all():
-                meta_A.update({row_A.name: row_A.value})
 
-            if row.document_id != meta_A["similar_to"]:
-                query_B = self.session.query(MetaORM).filter(
-                    MetaORM.document_id == meta_A["similar_to"]
-                )
-                meta_B = {}
-                for row_B in query_B.all():
-                    meta_B.update({row_B.name: row_B.value})
+            document_id_AB.append(
+                sorted([row.document_id, document_id_B.first().value])
+            )
 
-                document_A = {"document_id": row.document_id, "meta": meta_A}
-                document_B = {"document_id": meta_A["similar_to"], "meta": meta_B}
-                documents.append((document_A, document_B))
+        document_id_AB.sort()
+        document_id_AB = list(
+            document_id_AB for document_id_AB, _ in itertools.groupby(document_id_AB)
+        )
+
+        for document_id in document_id_AB:
+            meta_A = dict()
+            meta_B = dict()
+            meta_A.update({"document_id": document_id[0]})
+            meta_B.update({"document_id": document_id[1]})
+            for row in meta.filter(MetaORM.document_id == document_id[0]).all():
+                meta_A.update({row.name: row.value})
+            for row in meta.filter(MetaORM.document_id == document_id[1]).all():
+                meta_B.update({row.name: row.value})
+
+            for k in url_keys:
+                try:
+                    url_A = meta_A[k]
+                except:
+                    pass
+                try:
+                    url_B = meta_B[k]
+                except:
+                    pass
+            if (
+                edlib.align(url_A, url_B)["editDistance"] / min(len(url_A), len(url_B))
+                > 0.2
+            ):  # string similarity threshold
+                documents.append((meta_A, meta_B))
 
         return documents
 
