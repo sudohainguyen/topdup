@@ -18,7 +18,7 @@ class Retriever:
         candidate_vectorizer: DocVectorizerBase = None,
         retriever_vectorizer: DocVectorizerBase = None,
     ):
-        """ Init an instance of a Retriever
+        """Init an instance of a Retriever
 
         Args:
             document_store (FAISSDocumentStore): An instance of DocumentStore (FAISSDocumentStore)
@@ -41,12 +41,13 @@ class Retriever:
 
         self.index_vector_dim = self.document_store.vector_dim
 
-        if self.candidate_vectorizer is not None and \
-            self.index_vector_dim != self.candidate_vectorizer.vector_dim:
+        if (
+            self.candidate_vectorizer is not None
+            and self.index_vector_dim != self.candidate_vectorizer.vector_dim
+        ):
             raise ValueError(
                 "index_vector_dim must be the same with dimention vector of candidate vectorizer."
-                )
-
+            )
 
     def train_candidate_vectorizer(
         self,
@@ -67,7 +68,7 @@ class Retriever:
             if self.index_vector_dim != self.candidate_vectorizer.vector_dim:
                 raise ValueError(
                     "index_vector_dim must be the same with dimention vector of candidate vectorizer."
-                    )
+                )
             return
 
         if not self.candidate_vectorizer:
@@ -84,8 +85,8 @@ class Retriever:
             if not self.training_documents or len(self.training_documents) == 0:
                 raise ValueError(
                     "Fit method can not be called with empty DocumentStore"
-                                        " and empty training docuents"
-                    )
+                    " and empty training docuents"
+                )
         else:
             self.training_documents = training_documents
 
@@ -128,8 +129,8 @@ class Retriever:
             if not self.training_documents or len(self.training_documents) == 0:
                 raise ValueError(
                     "Fit method can not be called with empty DocumentStore"
-                                            " and empty training docuents"
-                    )
+                    " and empty training docuents"
+                )
         else:
             self.training_documents = training_documents
 
@@ -146,8 +147,10 @@ class Retriever:
         """Update embeddings of documents with candidate vectorizer to `document_store`."""
         if retrain:
             if not self.candidate_vectorizer.is_trained:
-                raise ValueError("Candidate vectorizer is not trained yet."
-                                " Try to call train_candidate_vectorizer first")
+                raise ValueError(
+                    "Candidate vectorizer is not trained yet."
+                    " Try to call train_candidate_vectorizer first"
+                )
 
             self.document_store.update_embeddings(self.candidate_vectorizer)
             if save_path:
@@ -171,8 +174,10 @@ class Retriever:
                              that are most relevant to each query_doc
         """
         if not self.candidate_vectorizer.is_trained:
-            raise ValueError("Candidate vectorizer is not trained yet."
-                             "Try to call train_candidate_vectorizer first")
+            raise ValueError(
+                "Candidate vectorizer is not trained yet."
+                "Try to call train_candidate_vectorizer first"
+            )
 
         query_embs = self.candidate_vectorizer.transform(query_docs)
         score_matrix, vector_id_matrix = self.document_store.query_ids_by_embedding(
@@ -192,8 +197,10 @@ class Retriever:
             [type]: [description]
         """
         if not self.retriever_vectorizer.is_trained:
-            raise ValueError("Retriever vectorizer is not trained yet."
-                             " Try to call train_retriever_vectorizer first")
+            raise ValueError(
+                "Retriever vectorizer is not trained yet."
+                " Try to call train_retriever_vectorizer first"
+            )
 
         query_emb = self.retriever_vectorizer.transform([query_doc])
         candidate_ids = list(map(str, candidate_ids))
@@ -233,10 +240,10 @@ class Retriever:
             [type]: [description]
         """
         if not self.document_store.is_synchronized():
-            raise ValueError (
-            "Faiss_index and database haven't been synchronized yet."
-            " Please, call update_embeddings methods first!"
-        )
+            raise ValueError(
+                "Faiss_index and database haven't been synchronized yet."
+                " Please, call update_embeddings methods first!"
+            )
 
         if processe_query_docs:
             processor = ViPreProcessor()
@@ -294,10 +301,10 @@ class Retriever:
             [type]: [description]
         """
         if not self.document_store.is_synchronized():
-            raise ValueError (
-            "Faiss_index and database haven't been synchronized yet."
-            " Please, call update_embeddings methods first!"
-        )
+            raise ValueError(
+                "Faiss_index and database haven't been synchronized yet."
+                " Please, call update_embeddings methods first!"
+            )
 
         retrieve_results = []
         for idx, query_doc in enumerate(
