@@ -1,30 +1,26 @@
+import createPool from "./pool.js";
 
-const Pool = require("pg").Pool
-
-const pool = new Pool({
-  user: "admin",
-  host: "3.1.100.54",
-  database: "topdup_db",
-  password: "uyL7WgydqKNkNMWe",
-  port: "5432"
-})
+const pool = createPool(process.env.POOL_HOST,
+                        process.env.POOL_DB_NAME,
+                        process.env.POOL_USR,
+                        process.env.POOL_PWD);
 
 const getSimRecordById = async (id, userId) => {
   try {
     const simReportsQuery = `
-      SELECT 
+      SELECT
         SR.id as id,
         A1.title as article_a,
-        A1.id as article_a_id, 
+        A1.id as article_a_id,
         A1.domain as domain_a,
-        A1.author as author_a, 
+        A1.author as author_a,
         A1.created_date as created_date_a,
         A2.title as article_b,
-        A2.id as article_b_id, 
+        A2.id as article_b_id,
         A2.domain as domain_b,
-        A2.author as author_b, 
+        A2.author as author_b,
         A2.created_date as created_date_b,
-        SR.sim_score as sim_score	
+        SR.sim_score as sim_score
       FROM public.similarity_report SR
       LEFT JOIN ARTICLE A1 ON A1.id = SR.article_a_id
       LEFT JOIN ARTICLE A2 ON A2.id = SR.article_b_id
@@ -76,19 +72,19 @@ const getSimRecordById = async (id, userId) => {
 const getSimilarityRecords = async (request, response) => {
   const userId = request.query.userId
   const getSimReportsQuery = `
-    SELECT 
+    SELECT
       SR.id as id,
       A1.title as article_a,
-      A1.id as article_a_id, 
+      A1.id as article_a_id,
       A1.domain as domain_a,
-      A1.author as author_a, 
+      A1.author as author_a,
       A1.created_date as created_date_a,
       A2.title as article_b,
-      A2.id as article_b_id, 
+      A2.id as article_b_id,
       A2.domain as domain_b,
-      A2.author as author_b, 
+      A2.author as author_b,
       A2.created_date as created_date_b,
-      SR.sim_score as sim_score	
+      SR.sim_score as sim_score
     FROM public.similarity_report SR
     LEFT JOIN ARTICLE A1 ON A1.id = SR.article_a_id
     LEFT JOIN ARTICLE A2 ON A2.id = SR.article_b_id
@@ -147,7 +143,7 @@ const applyVote = async (request, response) => {
     const query = userVoted
       ? `UPDATE public.vote SET voted_option = ${votedOption} WHERE id = ${voteId}`
       : `
-        INSERT INTO public.vote (article_a_id, article_b_id, voted_option, user_id, created_date) 
+        INSERT INTO public.vote (article_a_id, article_b_id, voted_option, user_id, created_date)
         VALUES (${articleAId}, ${articleBId}, ${votedOption}, ${userId}, '${createdDate}')
       `
     console.log('query', query)

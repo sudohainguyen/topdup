@@ -1,11 +1,9 @@
-const Pool = require("pg").Pool;
-const pool = new Pool({
-    user: 'admin',
-    host: 'localhost',
-    database: 'topdup_db',
-    password: 'admin',
-    port: 5432
-});
+import createPool from "./pool.js";
+
+const pool = createPool(process.env.HOSTNAME,
+                        process.env.POOL_DB_NAME,
+                        process.env.POOL_USR,
+                        process.env.POOL_USR);
 
 const getUsers = (request, response) => {
     const query = `
@@ -23,7 +21,7 @@ const getUsers = (request, response) => {
 const getUserById = (request, response) => {
     const id = parseInt(request.params.id);
     const query = `
-    SELECT * 
+    SELECT *
     FROM public."user" WHERE id = $1
   `;
     pool.query(query, [id], (error, results) => {
@@ -53,8 +51,8 @@ const updateUser = (request, response) => {
     const id = parseInt(request.params.id)
     const { firstName, lastName, email, login, password } = request.body;
     const query = `
-    UPDATE public."user" 
-    SET firstName = $1, lastName = $2, email = $3, login = $4, password = $5 
+    UPDATE public."user"
+    SET firstName = $1, lastName = $2, email = $3, login = $4, password = $5
     WHERE id = $6
   `;
     pool.query(query, [firstName, lastName, email, login, password, id], (error, results) => {

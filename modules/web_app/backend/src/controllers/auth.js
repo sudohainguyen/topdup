@@ -5,14 +5,12 @@ import { v4 as uuidv4 } from "uuid"
 import { externalAuthUrl, hostName, secretKey } from "../configs/index"
 import { CODE } from "../constants/index"
 import transporter from "./utils/nodemailer"
-const Pool = require("pg").Pool
-const pool = new Pool({
-  user: "admin",
-  host: "3.1.100.54",
-  database: "topdup_db",
-  password: "uyL7WgydqKNkNMWe",
-  port: "5432"
-})
+import createPool from "./pool.js";
+
+const pool = createPool(process.env.POOL_HOST,
+                        process.env.POOL_DB_NAME,
+                        process.env.POOL_USR,
+                        process.env.POOL_PWD);
 
 const generatorToken = (userId, baseToken) => {
   return jwt.sign(
@@ -28,14 +26,14 @@ const confirmEmail = async (req, res) => {
   try {
     const { userId, secret_code } = req.params
     const queryIsExist = `
-    SELECT * 
-    FROM public."user" 
+    SELECT *
+    FROM public."user"
     WHERE id = '${userId}' AND secret_code = '${secret_code}'
     `
     let isExist = await pool.query(queryIsExist)
     if (isExist.rows.length != 0) {
       const queryUpdate = `
-        UPDATE public."user" 
+        UPDATE public."user"
         SET is_verified = '${true}'
         WHERE id = '${userId}'
       `
@@ -78,7 +76,7 @@ const register = async (req, res) => {
         to: result.rows[0].email,
         subject: "Sending Email using Node.js",
         text: `Please use the following link within the next 10 minutes to activate your account on xxx APP: ${hostName}/api/v1/auth/verification/verify-account/${result.rows[0].id}/${secretCode}`,
-        html: `<p>Please use the following link within the next 10 minutes to activate your account on xxx APP: 
+        html: `<p>Please use the following link within the next 10 minutes to activate your account on xxx APP:
                 ${hostName}/api/v1/auth/verification/verify-account/${result.rows[0].id}/${secretCode}
                 <strong><a href="${hostName}/api/v1/auth/verification/verify-account/${result.rows[0].id}/${secretCode}" target="_blank">Email Topdup.xyz</a></strong></p>`
       }
@@ -108,8 +106,8 @@ const loginNormal = async (req, res) => {
   try {
     const { email, password } = req.body
     const query = `
-      SELECT * 
-      FROM public."user" 
+      SELECT *
+      FROM public."user"
       WHERE email = '${email}'
     `
     let result = await pool.query(query)
@@ -175,7 +173,7 @@ const loginByFaceBook = async (req, res) => {
       let isExist = await pool.query(queryIsExist)
       if (isExist.rows.length != 0) {
         const queryUpdate = `
-                UPDATE public."user" 
+                UPDATE public."user"
                 SET email = '${fbInfo.email}', thumbnail = '${fbInfo.picture.data.url}'
                 WHERE id = '${isExist.rows[0].id}'
                 RETURNING *
@@ -246,7 +244,7 @@ const loginByGoogle = async (req, res) => {
       let isExist = await pool.query(queryIsExist)
       if (isExist.rows.length != 0) {
         const queryUpdate = `
-                UPDATE public."user" 
+                UPDATE public."user"
                 SET  email = '${ggInfo.email}', thumnail = '${ggInfo.picture}'
                 WHERE id = '${isExist.id}'
                 RETURNING *
@@ -305,7 +303,7 @@ const restPassword = async (req, res) => {
     const { email, password, secret_code } = req.body
     const hashPassword = bcrypt.hashSync(password, 8)
     const queryUpdate = `
-            UPDATE public."user" 
+            UPDATE public."user"
             SET password = '${hashPassword}'
             WHERE email = '${email}' AND secret_code = '${secret_code}'
             RETURNING *
