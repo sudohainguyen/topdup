@@ -2,7 +2,7 @@ import API from '../../api'
 
 class SimReportsService {
   getSimilarityRecords = (userId) => {
-    return API.get(`/api/v1/similarity-reports?userId=${userId}`)
+    return API.get(`/api/v1/similarity-reports?userId=${userId || ''}`)
       .then(result => result.data.map(item => ({
         ...item,
         sim_score: parseFloat(item['sim_score']).toFixed(3)

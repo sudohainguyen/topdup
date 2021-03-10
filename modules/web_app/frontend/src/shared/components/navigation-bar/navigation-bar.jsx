@@ -1,12 +1,14 @@
 import React, { useState } from "react"
 import { Container, Nav, Navbar, NavDropdown } from "react-bootstrap"
 import { useLocation } from "react-router-dom"
+import LoginModal from "../../../components/Login/Login"
 import SignupModal from "../../../components/Signup/Signup"
 import "./navigation-bar.css"
 
 const NavigationBar = ({ isLoggedIn, setUserData }) => {
   const location = useLocation()
   const [signupModalShow, setSignupModalShow] = useState(false)
+  const [loginModalShow, setLoginModalShow] = useState(false)
 
   const logOut = () => {
     setUserData()
@@ -32,7 +34,7 @@ const NavigationBar = ({ isLoggedIn, setUserData }) => {
 
   const notLoggedInItems = (
     <>
-      <Nav.Link href="/sign-in">
+      <Nav.Link href="#" onClick={() => setLoginModalShow(true)}>
         <button className="btn btn-outline-secondary btn-sm">Đăng nhập</button>
       </Nav.Link>
       <Nav.Link href="#" onClick={() => setSignupModalShow(true)}>
@@ -64,6 +66,7 @@ const NavigationBar = ({ isLoggedIn, setUserData }) => {
         </Container>
       </Navbar>
       <SignupModal show={signupModalShow} onHide={() => setSignupModalShow(false)} />
+      <LoginModal setUserData={setUserData} show={loginModalShow} onHide={() => setLoginModalShow(false)} />
     </>
   )
 }

@@ -1,22 +1,28 @@
-import PropTypes from "prop-types"
 import React, { useRef, useState } from "react"
-import FacebookLoginWithButton from 'react-facebook-login'
+import { Modal } from "react-bootstrap"
+import FacebookLogin from 'react-facebook-login/dist/facebook-login-render-props'
+import { GoogleLogin } from 'react-google-login'
+import { FaFacebookSquare } from "react-icons/fa"
+import { FcGoogle } from "react-icons/fc"
+import ReactIconRender from "../../shared/components/React-Icon-Renderer"
 import "./Login.css"
 import AuthService from "./Login.service"
 
 
-export default function Login({ setUserData }) {
+export default function LoginModal(props) {
   const [username, setUsername] = useState()
   const [password, setPassword] = useState()
+  const setUserData = props.setUserData
 
   const mounted = useRef(true)
   const authService = new AuthService()
 
-  const loginResponseHandler = (result) => {
+  const loginResponseHandler = (result, modalProps) => {
     const httpCode = result.code
     if (httpCode !== 200) throw (result.message)
     if (mounted.current) {
       setUserData(result.data)
+      modalProps.onHide()
     }
   }
 
@@ -27,70 +33,77 @@ export default function Login({ setUserData }) {
   }
 
   const fbLoginClicked = () => { }
-  const fbLoginCallback = (fbRespose) => {
+  const fbLoginCallback = (fbRespose, modalProps) => {
     authService.loginByFacebook(fbRespose).then(
-      result => loginResponseHandler(result)
+      result => loginResponseHandler(result, modalProps)
     )
   }
 
+  const ggLoginCallback = (ggResponse) => {
+
+  }
+
   return (
-    <div className="auth-wrapper">
-      <div className="auth-inner">
-        <form onSubmit={handleSubmit}>
-          <h3>Sign In</h3>
-          <div className="form-group">
-            <label>Username</label>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Enter username"
-              onChange={e => setUsername(e.target.value)}
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Password</label>
-            <input
-              type="password"
-              className="form-control"
-              placeholder="Enter password"
-              onChange={e => setPassword(e.target.value)}
-            />
-          </div>
-
-          <div className="form-group">
-            <div className="custom-control custom-checkbox">
-              <input
-                type="checkbox"
-                className="custom-control-input"
-                id="customCheck1"
-              />
-              <label className="custom-control-label" htmlFor="customCheck1">
-                Remember me
-              </label>
-            </div>
-          </div>
-
-          <button type="submit" className="btn btn-primary btn-block">
-            Submit
-          </button>
-          <FacebookLoginWithButton
+    <Modal {...props} aria-labelledby="contained-modal-title-vcenter">
+      <div style={{ padding: "20px" }}>
+        <div className="layout-grid centered-container"><h2>Đăng nhập</h2></div>
+        <div className="layout-grid centered-container margin-bottom--20">
+          <GoogleLogin
+            clientId="658977310896-knrl3gka66fldh83dao2rhgbblmd4un9.apps.googleusercontent.com"
+            buttonText="Login"
+            onSuccess={ggLoginCallback}
+            onFailure={ggLoginCallback}
+            cookiePolicy={'single_host_origin'}
+            render={renderProps => (
+              <div onClick={renderProps.onClick}>
+                <ReactIconRender className={'ext-login-btn'} color={'#4267B2'} IconComponent={FcGoogle} />
+              </div>
+            )}
+          />
+          <FacebookLogin style={{ 'margin-top': '-5px' }}
             appId="800436117349613"
-            autoLoad
             fields="name,email,picture"
-            onClick={fbLoginClicked}
-            cssClass={"btn btn-primary btn-block mt-2"}
-            callback={fbLoginCallback}
-            icon="fa-facebook" />
-          <p className="forgot-password text-right">
-            Forgot <a href="#">password?</a>
-          </p>
-        </form>
+            cssClass="btn btn-primary btn-block mt-2 ext-login-btn"
+            callback={(response) => fbLoginCallback(response, props)}
+            render={renderProps => (
+              <div onClick={renderProps.onClick}>
+                <ReactIconRender className={'ext-login-btn'} color={'#4267B2'} IconComponent={FaFacebookSquare} />
+              </div>
+            )}
+          />
+        </div>
+
+        <div className="layout-grid centered-container margin-bottom--20">
+          <form className="width--80">
+            <div className="form-group">
+              <input type="text" className="form-control" placeholder="Email"
+                onChange={e => setUsername(e.target.value)} />
+            </div>
+
+            <div className="form-group">
+              <input type="password" className="form-control" placeholder="Mật khẩu"
+                onChange={e => setPassword(e.target.value)} />
+            </div>
+
+            <div className="form-group">
+              <input type="password" className="form-control" placeholder="Mật khẩu"
+                onChange={e => setPassword(e.target.value)} />
+            </div>
+            <div className="form-group">
+              <button class="btn login-btn full-width" onClick={handleSubmit}>Đăng nhập</button>
+            </div>
+          </form>
+        </div>
+
+        <div className="layout-grid centered-container margin-bottom--20">
+          Quên mật khẩu?
+        </div>
+
+        <div className="layout-grid centered-container margin-bottom--20">
+          Chưa có tài khoản?  <a href="#"> Đăng ký</a>
+        </div>
       </div>
-    </div>
+    </Modal>
   )
 }
 
-Login.propTypes = {
-  setToken: PropTypes.func.isRequired
-}

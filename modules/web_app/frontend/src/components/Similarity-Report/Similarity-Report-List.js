@@ -13,7 +13,6 @@ export const SimilarityReportList = (props) => {
   useEffect(() => setSimReports(props.simReports), [props.simReports])
   useEffect(() => setLoading(props.loading), [props.loading])
 
-
   if (loading) {
     return (
       <div className="sr-list-container centered-container">
@@ -61,25 +60,38 @@ export const SimilarityReportList = (props) => {
         <div className="sr-vote-container">
           <div className="sr-vote-check-container">
             <div className={voteItemClassName(1)}>
-              <button className="btn btn-outline-secondary btn-sm sr-vote-btn" onClick={() => applyVote(simReport, 1)}>
+              <button className="btn btn-outline-secondary btn-sm sr-vote-btn"
+                disabled={!userData}
+                onClick={() => applyVote(simReport, 1)}>
                 {simReport["articleANbVotes"]}&nbsp;{iconRenderer(FaCheck, "#3571FF")}
               </button>
             </div>
             <div className={voteItemClassName(2)}>
-              <button className="btn btn-outline-secondary btn-sm sr-vote-btn" onClick={() => applyVote(simReport, 2)}>
+              <button disabled={!userData}
+                className="btn btn-outline-secondary btn-sm sr-vote-btn"
+                onClick={() => applyVote(simReport, 2)}>
                 {simReport["articleBNbVotes"]}&nbsp;{iconRenderer(FaCheck, "#3571FF")}
               </button>
             </div>
           </div>
-          <div className={voteItemClassName(3)} onClick={() => applyVote(simReport, 3)}>
-            <button className="btn btn-outline-secondary btn-sm sr-vote-error-btn">{iconRenderer(FaTimes, "#EF5A5A")}</button>
+          <div className={voteItemClassName(3)}>
+            <button className="btn btn-outline-secondary btn-sm sr-vote-error-btn"
+              disabled={!userData}
+              onClick={() => applyVote(simReport, 3)}>
+              {iconRenderer(FaTimes, "#EF5A5A")}
+            </button>
           </div>
-          <div className={voteItemClassName(4)} onClick={() => applyVote(simReport, 4)}>
-            <button className="btn btn-outline-secondary btn-sm sr-vote-irrelevant-btn">{iconRenderer(FaHashtag, "#F69E0C")}</button>
+          <div className={voteItemClassName(4)}>
+            <button className="btn btn-outline-secondary btn-sm sr-vote-irrelevant-btn"
+              disabled={!userData}
+              onClick={() => applyVote(simReport, 4)}>
+              {iconRenderer(FaHashtag, "#F69E0C")}
+            </button>
           </div>
         </div>
         <div className="sr-domain-date">
           <div className="col-sm-6">
+
             <div className="row other">{simReport["domainA"]}</div>
             <div className="row other">{simReport["domainB"]}</div>
           </div>

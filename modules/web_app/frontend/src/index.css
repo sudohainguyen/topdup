@@ -140,6 +140,15 @@ span {
   width: 100%;
 }
 
+.width--80 {
+  width: 80%;
+}
+
 .bg--white {
   background-color: white;
+}
+
+.ext-login-btn {
+  height: 30px;
+  width: 30px;
 }
