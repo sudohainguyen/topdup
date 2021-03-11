@@ -4,18 +4,7 @@ import logging
 from typing import Any, Dict, List, Optional, Union
 from uuid import uuid4
 
-import edlib
-from sqlalchemy import (
-    Boolean,
-    Column,
-    DateTime,
-    ForeignKey,
-    Integer,
-    String,
-    Text,
-    create_engine,
-    func,
-)
+from sqlalchemy import Column, DateTime, ForeignKey, String, Text, create_engine, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.sql import case, null
@@ -150,12 +139,27 @@ class SQLDocumentStore(BaseDocumentStore):
         )
         return sorted_documents
 
-    def get_documents_by_sim_threshold(self, threshold: float = 0.90) -> List[Document]:
+    def get_similar_documents_by_threshold(
+        self,
+        threshold: float = 0.90,
+        from_time: datetime = None,
+        to_time: datetime = None,
+    ) -> List[Document]:
         """Fetch documents by specifying a threshold to filter the similarity scores in meta data"""
 
-        url_keys = ["url", "href"]
+        if not from_time and not to_time:  # get all
+            meta = self.session.query(MetaORM)
+        else:
+            if not from_time:
+                from_time = datetime.datetime(1970, 1, 1)
+            if not to_time:
+                to_time = datetime.datetime.now()
+            meta = self.session.query(MetaORM).filter(
+                MetaORM.updated > from_time, MetaORM.updated <= to_time
+            )
+
+        domain_keys = ["newspaper"]
         documents = list()
-        meta = self.session.query(MetaORM)
         document_id_AB = list()
         document_id_A = meta.filter(
             MetaORM.name == "sim_score",
@@ -186,19 +190,16 @@ class SQLDocumentStore(BaseDocumentStore):
             for row in meta.filter(MetaORM.document_id == document_id[1]).all():
                 meta_B.update({row.name: row.value})
 
-            for k in url_keys:
+            for k in domain_keys:
                 try:
-                    url_A = meta_A[k]
+                    domain_A = meta_A[k]
                 except:
                     pass
                 try:
-                    url_B = meta_B[k]
+                    domain_B = meta_B[k]
                 except:
                     pass
-            if (
-                edlib.align(url_A, url_B)["editDistance"] / min(len(url_A), len(url_B))
-                > 0.2
-            ):  # string similarity threshold
+            if domain_A != domain_B:  # rule defined by the PO
                 documents.append((meta_A, meta_B))
 
         return documents
@@ -240,7 +241,9 @@ class SQLDocumentStore(BaseDocumentStore):
             documents_map[row.id] = Document(
                 id=row.id,
                 text=row.text,
-                meta=None if row.vector_id is None else {"vector_id": row.vector_id},  # type: ignore
+                meta=None
+                if row.vector_id is None
+                else {"vector_id": row.vector_id},  # type: ignore
             )
 
         for doc_ids in self.chunked_iterable(
@@ -253,7 +256,9 @@ class SQLDocumentStore(BaseDocumentStore):
             for row in meta_query.all():
                 if documents_map[row.document_id].meta is None:
                     documents_map[row.document_id].meta = {}
-                documents_map[row.document_id].meta[row.name] = row.value  # type: ignore
+                documents_map[row.document_id].meta[
+                    row.name
+                ] = row.value  # type: ignore
 
         return list(documents_map.values())
 
@@ -342,12 +347,7 @@ class SQLDocumentStore(BaseDocumentStore):
             self.session.query(DocumentORM).filter(
                 DocumentORM.id.in_(chunk_map), DocumentORM.index == index
             ).update(
-                {
-                    DocumentORM.vector_id: case(
-                        chunk_map,
-                        value=DocumentORM.id,
-                    )
-                },
+                {DocumentORM.vector_id: case(chunk_map, value=DocumentORM.id)},
                 synchronize_session=False,
             )
             try:
