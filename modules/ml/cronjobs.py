@@ -17,7 +17,7 @@ POSTGRES_URI = os.getenv(
 )
 CAND_DIM = 768
 RTRV_DIM = 1024
-HARD_SIM_THRESHOLD = 0.8
+HARD_SIM_THRESHOLD = 0.5
 CAND_PATH = os.getenv("CAND_PATH", "cand.bin")
 RTRV_PATH = os.getenv("RTRV_PATH", "rtrv.bin")
 INDEX = os.getenv("INDEX", "document")
@@ -71,73 +71,58 @@ def update_local_db(local_doc_store, remote_doc_store):
     docs = remote_doc_store.get_documents_by_id(new_ids, index=INDEX)
     logging.info(f"Retrieved {len(docs)} at {datetime.now()}")
 
-    if len(docs) > 0:
-        local_doc_store.write_documents(docs)
-        logging.info("Stored documents to local db")
+    local_doc_store.write_documents(docs)
+    logging.info("Stored documents to local db")
 
-        local_retriever = Retriever(
-            document_store=local_doc_store,
-            candidate_vectorizer=TfidfDocVectorizer(CAND_DIM),
-            retriever_vectorizer=TfidfDocVectorizer(RTRV_DIM),
-        )
-        remote_retriever = Retriever(
-            document_store=remote_doc_store,
-            candidate_vectorizer=TfidfDocVectorizer(CAND_DIM),
-            retriever_vectorizer=TfidfDocVectorizer(RTRV_DIM),
-        )
+    local_retriever = Retriever(
+        document_store=local_doc_store,
+        candidate_vectorizer=TfidfDocVectorizer(CAND_DIM),
+        retriever_vectorizer=TfidfDocVectorizer(RTRV_DIM),
+    )
+    remote_retriever = Retriever(
+        document_store=remote_doc_store,
+        candidate_vectorizer=TfidfDocVectorizer(CAND_DIM),
+        retriever_vectorizer=TfidfDocVectorizer(RTRV_DIM),
+    )
 
-        if not os.path.exists(CAND_PATH) or not os.path.exists(RTRV_PATH):
-            remote_retriever.train_candidate_vectorizer(
-                retrain=True, save_path=CAND_PATH
-            )
-            remote_retriever.train_retriever_vectorizer(
-                retrain=True, save_path=RTRV_PATH
-            )
-            logging.info("Vectorizers retrained")
-        else:
-            remote_retriever.train_candidate_vectorizer(
-                retrain=False, save_path=CAND_PATH
-            )
-            remote_retriever.train_retriever_vectorizer(
-                retrain=False, save_path=RTRV_PATH
-            )
+    if not os.path.exists(CAND_PATH) or not os.path.exists(RTRV_PATH):
+        remote_retriever.train_candidate_vectorizer(retrain=True, save_path=CAND_PATH)
+        remote_retriever.train_retriever_vectorizer(retrain=True, save_path=RTRV_PATH)
+        logging.info("Vectorizers retrained")
+    else:
+        remote_retriever.train_candidate_vectorizer(retrain=False, save_path=CAND_PATH)
+        remote_retriever.train_retriever_vectorizer(retrain=False, save_path=RTRV_PATH)
 
-        local_retriever.train_candidate_vectorizer(retrain=False, save_path=CAND_PATH)
-        local_retriever.train_retriever_vectorizer(retrain=False, save_path=RTRV_PATH)
-        logging.info("Vectorizers loaded")
+    local_retriever.train_candidate_vectorizer(retrain=False, save_path=CAND_PATH)
+    local_retriever.train_retriever_vectorizer(retrain=False, save_path=RTRV_PATH)
+    logging.info("Vectorizers loaded")
 
-        local_retriever.update_embeddings(
-            retrain=True, save_path=LOCAL_IDX_PATH, sql_url=LOCAL_DB_URI
-        )
-        remote_retriever.update_embeddings(
-            retrain=remote_reindex, save_path=REMOTE_IDX_PATH, sql_url=POSTGRES_URI
-        )
-        logging.info("Embeddings updated")
+    local_retriever.update_embeddings(
+        retrain=True, save_path=LOCAL_IDX_PATH, sql_url=LOCAL_DB_URI
+    )
+    remote_retriever.update_embeddings(
+        retrain=remote_reindex, save_path=REMOTE_IDX_PATH, sql_url=POSTGRES_URI
+    )
+    logging.info("Embeddings updated")
 
-        docs = [doc.text for doc in docs]
-        local_results = local_retriever.batch_retrieve(docs)
-        if remote_reindex:
-            remote_result = local_results.copy()
-        else:
-            remote_result = remote_retriever.batch_retrieve(docs)
-        for _id, l, r in tqdm(
-            zip(new_ids, local_results, remote_result), total=len(new_ids)
-        ):
-            local_sim = l.get("similarity_score", 0)
-            remote_sim = r.get("similarity_score", 0)
-            if (local_sim > HARD_SIM_THRESHOLD) & (remote_sim > HARD_SIM_THRESHOLD):
-                if local_sim >= remote_sim:
-                    sim_data = {
-                        "sim_score": local_sim,
-                        "similar_to": l["retrieve_result"],
-                    }
-                else:
-                    sim_data = {
-                        "sim_score": remote_sim,
-                        "similar_to": r["retrieve_result"],
-                    }
-                remote_doc_store.update_document_meta(_id, sim_data)
-        logging.info("Similarity scores updated into metadata")
+    docs = [doc.text for doc in docs]
+    local_results = local_retriever.batch_retrieve(docs)
+    if remote_reindex:
+        remote_result = local_results.copy()
+    else:
+        remote_result = remote_retriever.batch_retrieve(docs)
+    for _id, l, r in tqdm(
+        zip(new_ids, local_results, remote_result), total=len(new_ids)
+    ):
+        local_sim = l.get("similarity_score", 0)
+        remote_sim = r.get("similarity_score", 0)
+        if (local_sim > HARD_SIM_THRESHOLD) & (remote_sim > HARD_SIM_THRESHOLD):
+            if local_sim >= remote_sim:
+                sim_data = {"sim_score": local_sim, "similar_to": l["retrieve_result"]}
+            else:
+                sim_data = {"sim_score": remote_sim, "similar_to": r["retrieve_result"]}
+            remote_doc_store.update_document_meta(_id, sim_data)
+    logging.info("Similarity scores updated into metadata")
 
 
 def update_remote_db(remote_doc_store):
