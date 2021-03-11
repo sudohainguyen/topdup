@@ -9,7 +9,9 @@ export class Pagination extends Component {
       pageNumbers.push(i)
     }
 
-    const displayPageNumbers = currentPage <= 5 ? pageNumbers.slice(0, 10) : pageNumbers.slice(currentPage - 5, currentPage + 5)
+    const displayPageNumbers = currentPage <= 5
+      ? pageNumbers.slice(0, 10)
+      : pageNumbers.slice(currentPage - 5, currentPage + 5)
 
     return (
       <nav>
