@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react"
 import { IconContext } from "react-icons"
 import { FaCheck, FaHashtag, FaTimes } from "react-icons/fa"
-import useUserData from "../App/useUserData"
-import SimReportsService from "./Similarity-Report.service"
+import useUserData from "../../shared/useUserData"
+import DupReportService from "./dup-report.service"
 
-export const SimilarityReportList = (props) => {
+export const DupReportList = (props) => {
   const [simReports, setSimReports] = useState({ ...props.simReports })
   const [loading, setLoading] = useState({ ...props.loading })
   const { userData, setUserData } = useUserData()
-  const simReportsService = new SimReportsService()
+  const dupReportService = new DupReportService()
 
   useEffect(() => setSimReports(props.simReports), [props.simReports])
   useEffect(() => setLoading(props.loading), [props.loading])
@@ -31,7 +31,7 @@ export const SimilarityReportList = (props) => {
 
   const applyVote = (simReport, votedOption) => {
     const userId = userData && userData.user && userData.user.id
-    simReportsService.applyVote(simReport, votedOption, userId)
+    dupReportService.applyVote(simReport, votedOption, userId)
       .then(result => {
         const updatedSimReport = result.data
         const updatedSimReports = simReports.map(item => {
@@ -45,7 +45,7 @@ export const SimilarityReportList = (props) => {
       })
   }
 
-  const simReportRowRenderer = simReport => {
+  const reportRowRenderer = simReport => {
     const voteItemClassName = value => "sr-vote-item " + (simReport["votedOption"] === value ? "selected" : "")
     return (
       <div className="sim-report-row">
@@ -107,7 +107,7 @@ export const SimilarityReportList = (props) => {
     )
   }
 
-  return <div className="sr-list-container">{simReports.map(item => simReportRowRenderer(item))}</div>
+  return <div className="sr-list-container">{simReports.map(item => reportRowRenderer(item))}</div>
 }
 
-export default SimilarityReportList
+export default DupReportList

@@ -1,8 +1,8 @@
 import { useState } from "react"
-import "./Similarity-Check.css"
-import SimilarityCheckService from "./Similarity-Check.service"
+import "./dup-compare.css"
+import DupCompareService from "./dup-compare.service"
 
-const SimilarityCheck = (props) => {
+const DupCompare = (props) => {
   const [comResults, setComResults] = useState([])
   const [sourceType, setSourceType] = useState('text')
   const [targetType, setTargetType] = useState('text')
@@ -11,7 +11,7 @@ const SimilarityCheck = (props) => {
   const [sourceUrl, setSourceUrl] = useState('')
   const [targetUrl, setTargetUrl] = useState('')
 
-  const simCheckService = new SimilarityCheckService()
+  const simCheckService = new DupCompareService()
 
   const getBtnClass = (sourceType, btnLabel) => {
     return sourceType === btnLabel
@@ -105,5 +105,5 @@ const SimilarityCheck = (props) => {
   )
 }
 
-export default SimilarityCheck
+export default DupCompare
 

@@ -1,6 +1,6 @@
 import { of } from 'rxjs'
 
-class SimilarityCheckService {
+class DupCompareService {
   getSimilarityResults = (sourceContent, targetContent) => {
     const sourceParagraphs = sourceContent.split('\n')
     const targetParagraphs = targetContent.split('\n')
@@ -16,4 +16,4 @@ class SimilarityCheckService {
   }
 }
 
-export default SimilarityCheckService
+export default DupCompareService

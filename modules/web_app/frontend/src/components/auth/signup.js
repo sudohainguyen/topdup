@@ -1,21 +1,21 @@
-import React, { useRef, useState } from "react"
+import { useRef } from "react"
 import { Modal } from "react-bootstrap"
 import FacebookLogin from 'react-facebook-login/dist/facebook-login-render-props'
 import { GoogleLogin } from 'react-google-login'
 import { FaFacebookSquare } from "react-icons/fa"
 import { FcGoogle } from "react-icons/fc"
-import ReactIconRender from "../../shared/components/React-Icon-Renderer"
-import "./Login.css"
-import AuthService from "./Login.service"
+import ReactIconRender from "../../shared/react-icon-renderer"
+import AuthService from "./auth-service"
+import './auth.css'
+import ValidatedSignupForm from "./vaidated-signup-form"
 
-
-export default function LoginModal(props) {
-  const [username, setUsername] = useState()
-  const [password, setPassword] = useState()
-  const setUserData = props.setUserData
-
+function SignupModal(props) {
   const mounted = useRef(true)
+  const setUserData = props.setUserDa
   const authService = new AuthService()
+  const onSubmitNomalSignup = (values) => {
+    console.log(values)
+  }
 
   const loginResponseHandler = (result, modalProps) => {
     const httpCode = result.code
@@ -26,13 +26,6 @@ export default function LoginModal(props) {
     }
   }
 
-  const handleSubmit = async e => {
-    e.preventDefault()
-    authService.getToken({ username, password })
-      .then(result => loginResponseHandler(result))
-  }
-
-  const fbLoginClicked = () => { }
   const fbLoginCallback = (fbRespose, modalProps) => {
     authService.loginByFacebook(fbRespose).then(
       result => loginResponseHandler(result, modalProps)
@@ -46,10 +39,10 @@ export default function LoginModal(props) {
   return (
     <Modal {...props} aria-labelledby="contained-modal-title-vcenter">
       <div style={{ padding: "20px" }}>
-        <div className="layout-grid centered-container"><h2>Đăng nhập</h2></div>
+        <div className="layout-grid centered-container auth-heading"><h2>Đăng ký</h2></div>
         <div className="layout-grid centered-container margin-bottom--20">
           <GoogleLogin
-            clientId="658977310896-knrl3gka66fldh83dao2rhgbblmd4un9.apps.googleusercontent.com"
+            clientId="xxx"
             buttonText="Login"
             onSuccess={ggLoginCallback}
             onFailure={ggLoginCallback}
@@ -74,36 +67,11 @@ export default function LoginModal(props) {
         </div>
 
         <div className="layout-grid centered-container margin-bottom--20">
-          <form className="width--80">
-            <div className="form-group">
-              <input type="text" className="form-control" placeholder="Email"
-                onChange={e => setUsername(e.target.value)} />
-            </div>
-
-            <div className="form-group">
-              <input type="password" className="form-control" placeholder="Mật khẩu"
-                onChange={e => setPassword(e.target.value)} />
-            </div>
-
-            <div className="form-group">
-              <input type="password" className="form-control" placeholder="Mật khẩu"
-                onChange={e => setPassword(e.target.value)} />
-            </div>
-            <div className="form-group">
-              <button class="btn login-btn full-width" onClick={handleSubmit}>Đăng nhập</button>
-            </div>
-          </form>
-        </div>
-
-        <div className="layout-grid centered-container margin-bottom--20">
-          Quên mật khẩu?
-        </div>
-
-        <div className="layout-grid centered-container margin-bottom--20">
-          Chưa có tài khoản?  <a href="#"> Đăng ký</a>
+          <ValidatedSignupForm onSubmitSignup={onSubmitNomalSignup} />
         </div>
       </div>
     </Modal>
   )
 }
 
+export default SignupModal
