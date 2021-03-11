@@ -7,7 +7,7 @@ const cors = require("cors")
 // import xXssProtection from "x-xss-protection"
 require('dotenv').config()
 export const app = express()
-const port = 5000
+const port = process.env.PORT || "5000"
 app.use(cors())
 app.options('*', cors())  // enable pre-flight
 // Add extra config to solve CROS prob.
