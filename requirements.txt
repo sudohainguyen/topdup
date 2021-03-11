@@ -16,6 +16,7 @@ elasticsearch>=7.7,<=7.10
 elastic-apm
 tox
 coverage
+edlib
 langdetect # for PDF conversions
 # optional: sentence-transformers
 python-multipart
