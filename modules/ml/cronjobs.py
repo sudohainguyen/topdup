@@ -1,12 +1,17 @@
 import logging
 import os
+import uuid
 from datetime import datetime, timedelta
 
+import pandas as pd
 import schedule
+from sqlalchemy.exc import ProgrammingError
+from sqlalchemy.orm.relationships import remote
 from tqdm.auto import tqdm
 
+from modules.ml.document_store.faiss import FAISSDocumentStore
 from modules.ml.retriever.retriever import Retriever
-from modules.ml.utils import get_connection
+from modules.ml.utils import meta_parser
 from modules.ml.vectorizer.tf_idf import TfidfDocVectorizer
 
 # TODO: config remote logging
@@ -24,8 +29,16 @@ INDEX = os.getenv("INDEX", "document")
 LOCAL_IDX_PATH = os.getenv("LOCAL_IDX_PATH", "local_index.bin")
 REMOTE_IDX_PATH = os.getenv("REMOTE_IDX_PATH", "remote_index.bin")
 
-local_doc_store = get_connection(LOCAL_DB_URI, CAND_DIM)
-remote_doc_store = get_connection(POSTGRES_URI, CAND_DIM)
+logger = logging.getLogger(__name__)
+
+
+def get_connection(uri: str, vector_dim: int):
+    try:
+        conn = FAISSDocumentStore(sql_url=uri, vector_dim=vector_dim)
+        return conn
+    except Exception as e:
+        logger.error(e)
+        return None
 
 
 def update_local_db(local_doc_store, remote_doc_store):
@@ -43,11 +56,11 @@ def update_local_db(local_doc_store, remote_doc_store):
     """
 
     if not local_doc_store or not remote_doc_store:
-        logging.warning("DB connection not initialized, trying re-connect...")
+        logger.warning("DB connection not initialized, trying re-connect...")
         local_doc_store = get_connection(LOCAL_DB_URI, CAND_DIM)
         remote_doc_store = get_connection(POSTGRES_URI, CAND_DIM)
         if not local_doc_store or not remote_doc_store:
-            logging.error("DB initialization failed, quit local_update...")
+            logger.error("DB initialization failed, quit local_update...")
             return
 
     remote_reindex = not os.path.exists(REMOTE_IDX_PATH)
@@ -60,7 +73,7 @@ def update_local_db(local_doc_store, remote_doc_store):
             from_time=datetime.now() - timedelta(minutes=3), index=INDEX
         )
     if not new_ids:
-        logging.info(f"No new updates in local db at {datetime.now()}")
+        logger.info(f"No new updates in local db at {datetime.now()}")
         return
 
     local_ids = local_doc_store.get_document_ids(index=INDEX)
@@ -69,10 +82,10 @@ def update_local_db(local_doc_store, remote_doc_store):
     new_ids = sorted([_id for _id in new_ids if _id not in local_ids])
 
     docs = remote_doc_store.get_documents_by_id(new_ids, index=INDEX)
-    logging.info(f"Retrieved {len(docs)} at {datetime.now()}")
+    logger.info(f"Retrieved {len(docs)} at {datetime.now()}")
 
     local_doc_store.write_documents(docs)
-    logging.info("Stored documents to local db")
+    logger.info("Stored documents to local db")
 
     local_retriever = Retriever(
         document_store=local_doc_store,
@@ -88,14 +101,14 @@ def update_local_db(local_doc_store, remote_doc_store):
     if not os.path.exists(CAND_PATH) or not os.path.exists(RTRV_PATH):
         remote_retriever.train_candidate_vectorizer(retrain=True, save_path=CAND_PATH)
         remote_retriever.train_retriever_vectorizer(retrain=True, save_path=RTRV_PATH)
-        logging.info("Vectorizers retrained")
+        logger.info("Vectorizers retrained")
     else:
         remote_retriever.train_candidate_vectorizer(retrain=False, save_path=CAND_PATH)
         remote_retriever.train_retriever_vectorizer(retrain=False, save_path=RTRV_PATH)
 
     local_retriever.train_candidate_vectorizer(retrain=False, save_path=CAND_PATH)
     local_retriever.train_retriever_vectorizer(retrain=False, save_path=RTRV_PATH)
-    logging.info("Vectorizers loaded")
+    logger.info("Vectorizers loaded")
 
     local_retriever.update_embeddings(
         retrain=True, save_path=LOCAL_IDX_PATH, sql_url=LOCAL_DB_URI
@@ -103,7 +116,7 @@ def update_local_db(local_doc_store, remote_doc_store):
     remote_retriever.update_embeddings(
         retrain=remote_reindex, save_path=REMOTE_IDX_PATH, sql_url=POSTGRES_URI
     )
-    logging.info("Embeddings updated")
+    logger.info("Embeddings updated")
 
     docs = [doc.text for doc in docs]
     local_results = local_retriever.batch_retrieve(docs)
@@ -122,7 +135,7 @@ def update_local_db(local_doc_store, remote_doc_store):
             else:
                 sim_data = {"sim_score": remote_sim, "similar_to": r["retrieve_result"]}
             remote_doc_store.update_document_meta(_id, sim_data)
-    logging.info("Similarity scores updated into metadata")
+    logger.info("Similarity scores updated into metadata")
 
 
 def update_remote_db(remote_doc_store):
@@ -142,13 +155,104 @@ def update_remote_db(remote_doc_store):
     )
     remote_retriever.train_candidate_vectorizer(retrain=False, save_path=CAND_PATH)
     remote_retriever.update_embeddings(retrain=True)
-    logging.info("Remote embeddings and vector ids updated")
+    logger.info("Remote embeddings and vector ids updated")
 
     local_doc_store.delete_all_documents()
 
 
+def consolidate_sim_docs(remote_doc_store):
+    """
+    Write a proper docstring later
+    """
+
+    docs = remote_doc_store.get_similar_documents_by_threshold(
+        threshold=HARD_SIM_THRESHOLD, from_time=datetime.now() - timedelta(minutes=3)
+    )
+
+    if not docs:
+        logger.info(f"No new similar docs at {datetime.now()}")
+        return
+
+    data = list()
+    for doc in docs:
+        try:
+            data.append(
+                [
+                    doc[0]["document_id"],
+                    doc[1]["document_id"],
+                    meta_parser("domain", doc[0]),
+                    meta_parser("domain", doc[1]),
+                    meta_parser("url", doc[0]),
+                    meta_parser("url", doc[1]),
+                    meta_parser("publish_date", doc[0]),
+                    meta_parser("publish_date", doc[1]),
+                    meta_parser("title", doc[0]),
+                    meta_parser("title", doc[1]),
+                    doc[0]["sim_score"],
+                    str(
+                        uuid.uuid5(
+                            uuid.NAMESPACE_DNS,
+                            doc[0]["document_id"] + doc[1]["document_id"],
+                        )
+                    ),
+                ]
+            )
+        except Exception as e:
+            logger.error(str(e))
+            logger.info(doc)
+
+    df = pd.DataFrame(
+        data,
+        columns=[
+            "document_id_A",
+            "document_id_B",
+            "domain_A",
+            "domain_B",
+            "url_A",
+            "url_B",
+            "publish_date_A",
+            "publish_date_B",
+            "title_A",
+            "title_B",
+            "sim_score",
+            "sim_id",
+        ],
+    )
+
+    try:
+        existing_sim_id = pd.read_sql_query(
+            "SELECT DISTINCT sim_id FROM similar_docs", con=remote_doc_store.engine
+        )["sim_id"].values.tolist()
+    except ProgrammingError:
+        existing_sim_id = list()
+    df = df[~df.sim_id.isin(existing_sim_id)]
+
+    if df.empty:
+        logger.info(f"No new similar docs at {datetime.now()}")
+        return
+    else:
+        logger.info(f"Retrieved {len(df)} similar docs at {datetime.now()}")
+
+    df.to_sql(
+        name="similar_docs",
+        schema="public",
+        con=remote_doc_store.engine,
+        if_exists="append",
+        index=False,
+    )
+    try:
+        with remote_doc_store.engine.connect() as con:
+            con.execute('ALTER TABLE similar_docs ADD PRIMARY KEY ("sim_id")')
+    except ProgrammingError:
+        pass
+
+
 if __name__ == "__main__":
+    local_doc_store = get_connection(LOCAL_DB_URI, CAND_DIM)
+    remote_doc_store = get_connection(POSTGRES_URI, CAND_DIM)
+
     schedule.every().minute.do(update_local_db, local_doc_store, remote_doc_store)
+    schedule.every().minute.do(consolidate_sim_docs, remote_doc_store)
     schedule.every().day.at("00:00").do(update_remote_db, remote_doc_store)
     while True:
         schedule.run_pending()
