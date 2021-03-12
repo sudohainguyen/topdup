@@ -12,6 +12,7 @@ from sqlalchemy.sql.sqltypes import Float
 
 from modules.ml.document_store.base import BaseDocumentStore
 from modules.ml.schema import Document
+from modules.ml.utils import meta_parser
 
 logger = logging.getLogger(__name__)
 
@@ -81,6 +82,7 @@ class SQLDocumentStore(BaseDocumentStore):
                            More info refer: https://www.sqlite.org/limits.html
         """
         engine = create_engine(url)
+        self.engine = engine
         ORMBase.metadata.create_all(engine)
         Session = sessionmaker(bind=engine)
         self.session = Session()
@@ -158,7 +160,6 @@ class SQLDocumentStore(BaseDocumentStore):
                 MetaORM.updated > from_time, MetaORM.updated <= to_time
             )
 
-        domain_keys = ["newspaper"]
         documents = list()
         document_id_AB = list()
         document_id_A = meta.filter(
@@ -190,15 +191,8 @@ class SQLDocumentStore(BaseDocumentStore):
             for row in meta.filter(MetaORM.document_id == document_id[1]).all():
                 meta_B.update({row.name: row.value})
 
-            for k in domain_keys:
-                try:
-                    domain_A = meta_A[k]
-                except:
-                    pass
-                try:
-                    domain_B = meta_B[k]
-                except:
-                    pass
+            domain_A = meta_parser("domain", meta_A).lower()
+            domain_B = meta_parser("domain", meta_B).lower()
             if domain_A != domain_B:  # rule defined by the PO
                 documents.append((meta_A, meta_B))
 
