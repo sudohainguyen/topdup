@@ -12,6 +12,8 @@ from modules.ml.plugins.vncorenlp import VnCoreNLPSingleton
 from .base import BasePreProcessor
 from .cleaning import normalize_text
 
+nltk.download("punkt")
+
 logger = logging.getLogger(__name__)
 
 
