@@ -14,6 +14,7 @@ class DupReport extends Component {
 
     this.state = {
       userData: props.userData,
+      setUserData: props.setUserData,
       simReports: [],
       reportsPerPage: 8,
       loading: false,
@@ -51,7 +52,10 @@ class DupReport extends Component {
       <div className="sim-reports-container">
         <div className="sr-list-with-header">
           <HeaderRow />
-          <DupReportList simReports={currentSimReports} loading={loading} />
+          <DupReportList setUserData={this.props.setUserData}
+            userData={this.props.userData}
+            simReports={currentSimReports}
+            loading={loading} />
         </div>
         <Pagination
           reportsPerPage={reportsPerPage}

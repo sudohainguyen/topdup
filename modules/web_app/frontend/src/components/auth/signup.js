@@ -1,39 +1,37 @@
-import { useRef } from "react"
 import { Modal } from "react-bootstrap"
 import FacebookLogin from 'react-facebook-login/dist/facebook-login-render-props'
 import { GoogleLogin } from 'react-google-login'
 import { FaFacebookSquare } from "react-icons/fa"
 import { FcGoogle } from "react-icons/fc"
+import { AuthMode, HTTP_CODE, Severity } from "../../shared/constants"
 import ReactIconRender from "../../shared/react-icon-renderer"
+import { ToastService } from "../../shared/toast.service"
 import AuthService from "./auth-service"
 import './auth.css'
 import ValidatedSignupForm from "./vaidated-signup-form"
 
 function SignupModal(props) {
-  const mounted = useRef(true)
-  const setUserData = props.setUserDa
+  const setUserData = props.setUserData
   const authService = new AuthService()
-  const onSubmitNomalSignup = (values) => {
-    console.log(values)
-  }
+  const toastService = new ToastService()
 
-  const loginResponseHandler = (result, modalProps) => {
-    const httpCode = result.code
-    if (httpCode !== 200) throw (result.message)
-    if (mounted.current) {
-      setUserData(result.data)
-      modalProps.onHide()
-    }
-  }
+  const onSubmitSignup = (signupMode, userCredential, modalProps) => {
+    let httpRequest = authService.signupNormal(userCredential)
+    if (signupMode === AuthMode.Facebook) httpRequest = authService.authByFacebook(userCredential)
+    if (signupMode === AuthMode.Google) httpRequest = authService.authByGoogle(userCredential)
 
-  const fbLoginCallback = (fbRespose, modalProps) => {
-    authService.loginByFacebook(fbRespose).then(
-      result => loginResponseHandler(result, modalProps)
+    httpRequest.then(
+      result => {
+        if (result.status !== HTTP_CODE.SUCCESS) {
+          toastService.displayToast(result, Severity.Warning)
+          return
+        }
+        setUserData(result.data && result.data.user)
+        toastService.displayToast(result, Severity.Success)
+        modalProps.onHide()
+      },
+      error => toastService.displayToast(error.response, Severity.Error)
     )
-  }
-
-  const ggLoginCallback = (ggResponse) => {
-
   }
 
   return (
@@ -44,8 +42,8 @@ function SignupModal(props) {
           <GoogleLogin
             clientId="xxx"
             buttonText="Login"
-            onSuccess={ggLoginCallback}
-            onFailure={ggLoginCallback}
+            onSuccess={(ggResponse) => onSubmitSignup(AuthMode.Google, ggResponse, props)}
+            onFailure={(ggResponse) => { }}
             cookiePolicy={'single_host_origin'}
             render={renderProps => (
               <div onClick={renderProps.onClick}>
@@ -57,7 +55,7 @@ function SignupModal(props) {
             appId="800436117349613"
             fields="name,email,picture"
             cssClass="btn btn-primary btn-block mt-2 ext-login-btn"
-            callback={(response) => fbLoginCallback(response, props)}
+            callback={(response) => onSubmitSignup(AuthMode.Facebook, response, props)}
             render={renderProps => (
               <div onClick={renderProps.onClick}>
                 <ReactIconRender className={'ext-login-btn'} color={'#4267B2'} IconComponent={FaFacebookSquare} />
@@ -67,7 +65,7 @@ function SignupModal(props) {
         </div>
 
         <div className="layout-grid centered-container margin-bottom--20">
-          <ValidatedSignupForm onSubmitSignup={onSubmitNomalSignup} />
+          <ValidatedSignupForm onSubmitSignup={(values) => onSubmitSignup(AuthMode.Normal, values, props)} />
         </div>
       </div>
     </Modal>

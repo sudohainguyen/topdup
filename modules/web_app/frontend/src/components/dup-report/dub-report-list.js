@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from "react"
+import React, { useContext, useEffect, useState } from "react"
 import { IconContext } from "react-icons"
 import { FaCheck, FaHashtag, FaTimes } from "react-icons/fa"
-import useUserData from "../../shared/useUserData"
+import { AuthContext } from "../auth/auth-context"
 import DupReportService from "./dup-report.service"
 
 export const DupReportList = (props) => {
   const [simReports, setSimReports] = useState({ ...props.simReports })
   const [loading, setLoading] = useState({ ...props.loading })
-  const { userData, setUserData } = useUserData()
   const dupReportService = new DupReportService()
+  const authContext = useContext(AuthContext)
 
   useEffect(() => setSimReports(props.simReports), [props.simReports])
   useEffect(() => setLoading(props.loading), [props.loading])
@@ -30,7 +30,7 @@ export const DupReportList = (props) => {
   }
 
   const applyVote = (simReport, votedOption) => {
-    const userId = userData && userData.user && userData.user.id
+    const userId = authContext.user.id
     dupReportService.applyVote(simReport, votedOption, userId)
       .then(result => {
         const updatedSimReport = result.data
@@ -61,14 +61,14 @@ export const DupReportList = (props) => {
           <div className="sr-vote-check-container">
             <div className={voteItemClassName(1)}>
               <button className="btn btn-outline-secondary btn-sm sr-vote-btn"
-                disabled={!userData}
+                disabled={!authContext.isLoggedIn}
                 onClick={() => applyVote(simReport, 1)}>
                 {simReport["articleANbVotes"]}&nbsp;{iconRenderer(FaCheck, "#3571FF")}
               </button>
             </div>
             <div className={voteItemClassName(2)}>
-              <button disabled={!userData}
-                className="btn btn-outline-secondary btn-sm sr-vote-btn"
+              <button className="btn btn-outline-secondary btn-sm sr-vote-btn"
+                disabled={!authContext.isLoggedIn}
                 onClick={() => applyVote(simReport, 2)}>
                 {simReport["articleBNbVotes"]}&nbsp;{iconRenderer(FaCheck, "#3571FF")}
               </button>
@@ -76,14 +76,14 @@ export const DupReportList = (props) => {
           </div>
           <div className={voteItemClassName(3)}>
             <button className="btn btn-outline-secondary btn-sm sr-vote-error-btn"
-              disabled={!userData}
+              disabled={!authContext.isLoggedIn}
               onClick={() => applyVote(simReport, 3)}>
               {iconRenderer(FaTimes, "#EF5A5A")}
             </button>
           </div>
           <div className={voteItemClassName(4)}>
             <button className="btn btn-outline-secondary btn-sm sr-vote-irrelevant-btn"
-              disabled={!userData}
+              disabled={!authContext.isLoggedIn}
               onClick={() => applyVote(simReport, 4)}>
               {iconRenderer(FaHashtag, "#F69E0C")}
             </button>
