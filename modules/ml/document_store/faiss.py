@@ -186,11 +186,9 @@ class FAISSDocumentStore(SQLDocumentStore):
             )
 
     def _create_document_field_map(self) -> Dict:
-        return {
-            self.index: "embedding",
-        }
+        return {self.index: "embedding"}
 
-    def update_embeddings(self, vecterizer, index: Optional[str] = None):
+    def update_embeddings(self, vectorizer, index: Optional[str] = None):
         """
         Updates the embeddings in the the document store using the encoding model specified in the retriever.
         This can be useful if want to add or change the embeddings for your documents (e.g. after changing the retriever config).
@@ -221,7 +219,7 @@ class FAISSDocumentStore(SQLDocumentStore):
         # self.faiss_index.reset()
 
         logger.info(f"Updating embeddings for {len(documents)} docs...")
-        embeddings = vecterizer.transform_document_objects(documents)  # type: ignore
+        embeddings = vectorizer.transform_document_objects(documents)  # type: ignore
         assert len(documents) == len(embeddings)
         for i, doc in enumerate(documents):
             doc.embedding = embeddings[i]

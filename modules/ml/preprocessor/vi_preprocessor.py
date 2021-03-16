@@ -127,8 +127,9 @@ class ViPreProcessor(BasePreProcessor):
                 segments = windowed(elems, n=self.split_length, step=self.split_length)
             text_splits = []
             for seg in segments:
-                txt = " ".join([t for t in seg if t])
-                text_splits.append(txt)
+                # txt = " ".join([t for t in seg if t])
+                # text_splits.append(txt)
+                text_splits = [t for t in seg if t]
 
         # create new document dicts for each text split
         documents = []
