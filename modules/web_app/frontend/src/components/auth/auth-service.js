@@ -7,14 +7,27 @@ export class AuthService {
       .then(result => result.data)
   }
 
-  loginByFacebook = (fbResponse) => {
+  loginNormal = (userCredential) => {
+    return API.post("api/v1/auth/get-token", userCredential)
+  }
+
+  signupNormal = (userCredential) => {
+    return API.post("api/v1/auth/user", userCredential)
+  }
+
+  // Create user account if not exist
+  // Signup and Login are combined into one single function
+  authByFacebook = (fbResponse) => {
     const body = {
       fbToken: fbResponse.accessToken,
       fbId: fbResponse.id
     }
     return API.post("api/v1/auth/get-token/fb", body)
-      .then(result => result.data)
   }
+
+  // Create user account if not exist
+  // Signup and Login are combined into one single function
+  authByGoogle = () => { }
 }
 
 export default AuthService

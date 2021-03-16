@@ -29,7 +29,7 @@ const ValidatedSignupForm = (inputProps) => {
                     <input
                         name="email"
                         type="text"
-                        placeholder="Enter your email"
+                        placeholder="Nhập địa chỉ email"
                         value={values.email}
                         onChange={handleChange}
                         onBlur={handleBlur}
