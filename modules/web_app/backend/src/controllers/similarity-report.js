@@ -1,9 +1,12 @@
-import createPool from "./pool.js";
+import { CODE } from "../constants/index.js"
+import createPool from "./pool.js"
 
-const pool = createPool(process.env.POOL_HOST,
-                        process.env.POOL_DB_NAME,
-                        process.env.POOL_USR,
-                        process.env.POOL_PWD);
+const pool = createPool(
+  process.env.POOL_HOST,
+  process.env.POOL_DB_NAME,
+  process.env.POOL_USR,
+  process.env.POOL_PWD
+)
 
 const getSimRecordById = async (id, userId) => {
   try {
@@ -127,7 +130,7 @@ const getSimilarityRecords = async (request, response) => {
       votedOption: foundVote && foundVote['voted_option']
     }
   })
-  response.status(200).json(results)
+  response.status(CODE.SUCCESS).json(results)
 }
 
 const applyVote = async (request, response) => {
