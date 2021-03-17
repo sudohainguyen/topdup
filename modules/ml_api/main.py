@@ -1,6 +1,7 @@
 import os
 from copy import deepcopy
 
+import pandas as pd
 from fastapi import FastAPI, Response, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -20,7 +21,23 @@ POSTGRES_URI = os.getenv(
 )
 CAND_DIM = 768
 RTRV_DIM = 1024
+EDIT_DISTANCE_THRESHOLD = 0.25
 CAND_PATH = os.getenv("CAND_PATH", "cand.bin")
+URL_QUERY = """
+            SELECT text_original
+            FROM (
+                SELECT value AS url
+                    ,document_id
+                FROM meta m
+                WHERE lower(name) IN (
+                        'href'
+                        ,'url'
+                        )
+                ) AS url_table
+            INNER JOIN "document" d ON url_table.document_id = d.id
+            WHERE CAST(levenshtein('{0}', url) AS DECIMAL) / CAST(length(url) AS DECIMAL) < {1}
+            ORDER BY levenshtein('{0}', url) LIMIT 1
+            """
 
 # Default methods
 preprocessor = ViPreProcessor(split_by="sentence")
@@ -35,6 +52,8 @@ retriever = Retriever(
     retriever_vectorizer=TfidfDocVectorizer(RTRV_DIM),
 )
 retriever.train_candidate_vectorizer(retrain=False, save_path=CAND_PATH)
+
+remote_doc_store = FAISSDocumentStore(sql_url=POSTGRES_URI, vector_dim=CAND_DIM)
 
 tags_metadata = [
     {"name": "get", "description": "Properly do nothing now"},
@@ -56,16 +75,10 @@ def get_query():
     return Response()
 
 
-@app.post(
-    "/compare",
-    response_model=QueryResult,
-    status_code=status.HTTP_200_OK,
-    tags=["compare"],
-)
-def compare(entry: CompareEntry, response: Response):
+def compare_(text_A: str, text_B: str):
     # Split texts before cleaning
-    s_text_A = preprocessor.split({"text": entry.pairs[0]})
-    s_text_B = preprocessor.split({"text": entry.pairs[1]})
+    s_text_A = preprocessor.split({"text": text_A})
+    s_text_B = preprocessor.split({"text": text_B})
 
     # Clean texts
     sc_text_A = deepcopy(s_text_A)
@@ -90,14 +103,51 @@ def compare(entry: CompareEntry, response: Response):
     for a, b in zip(row_idx, col_idx):
         results.append(
             {
-                "text_A": s_text_A[a]["text"],
-                "sentence_id_A": s_text_A[a]["meta"]["_split_id"],
-                "text_B": s_text_B[b]["text"],
-                "sentence_id_B": s_text_B[b]["meta"]["_split_id"],
+                "textA": s_text_A[a]["text"],
+                "textAIdx": s_text_A[a]["meta"]["_split_id"],
+                "textB": s_text_B[b]["text"],
+                "textBIdx": s_text_B[b]["meta"]["_split_id"],
             }
         )
 
-    return {"message": "Successfully requested TopDup-ML [compare]", "result": results}
+    return results
+
+
+@app.post(
+    "/compare",
+    response_model=QueryResult,
+    status_code=status.HTTP_200_OK,
+    tags=["compare"],
+)
+def compare(entry: CompareEntry, response: Response):
+    if entry.mode == "url":
+        text_A = pd.read_sql_query(
+            URL_QUERY.format(entry.pairs[0], EDIT_DISTANCE_THRESHOLD),
+            con=remote_doc_store.engine,
+        )
+        text_B = pd.read_sql_query(
+            URL_QUERY.format(entry.pairs[1], EDIT_DISTANCE_THRESHOLD),
+            con=remote_doc_store.engine,
+        )
+
+        if (not text_A.empty) & (not text_B.empty):
+            results = compare_(text_A.values[0][0], text_A.values[0][0])
+            return {
+                "message": "Successfully requested TopDup-ML [compare]",
+                "results": results,
+            }
+        else:
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return {"message": "We cannot find your URLs"}
+    elif entry.mode == "text":
+        results = compare_(entry.pairs[0], entry.pairs[1])
+        return {
+            "message": "Successfully requested TopDup-ML [compare]",
+            "results": results,
+        }
+    else:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return {"message": "Invalid input mode, either url or text"}
 
 
 @app.exception_handler(RequestValidationError)

@@ -4,9 +4,10 @@ from pydantic import BaseModel
 
 
 class CompareEntry(BaseModel):
+    mode: str
     pairs: List[str]
 
 
 class QueryResult(BaseModel):
     message: str
-    result: List[dict] = None
+    results: List[dict] = None
