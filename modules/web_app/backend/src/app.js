@@ -89,5 +89,5 @@ process.on('unhandledRejection', error => {
 })
 server.listen(port)
 
-
-export default app
+exports.app = app
+exports.server = server
