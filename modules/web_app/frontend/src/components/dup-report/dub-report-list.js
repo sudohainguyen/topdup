@@ -1,16 +1,17 @@
-import React, { useEffect, useState } from "react"
+import React, { useContext, useEffect, useState } from "react"
 import { IconContext } from "react-icons"
 import { FaCheck, FaHashtag, FaTimes } from "react-icons/fa"
-import SimReportsService from "./Similarity-Report.service"
+import { AuthContext } from "../auth/auth-context"
+import DupReportService from "./dup-report.service"
 
-export const SimilarityReportList = (props) => {
+export const DupReportList = (props) => {
   const [simReports, setSimReports] = useState({ ...props.simReports })
   const [loading, setLoading] = useState({ ...props.loading })
-  const simReportsService = new SimReportsService()
+  const dupReportService = new DupReportService()
+  const authContext = useContext(AuthContext)
 
   useEffect(() => setSimReports(props.simReports), [props.simReports])
   useEffect(() => setLoading(props.loading), [props.loading])
-
 
   if (loading) {
     return (
@@ -29,10 +30,8 @@ export const SimilarityReportList = (props) => {
   }
 
   const applyVote = (simReport, votedOption) => {
-    const userDataStr = sessionStorage.getItem("userData")
-    const userData = JSON.parse(userDataStr)
-    const userId = userData && userData.id
-    simReportsService.applyVote(simReport, votedOption, userId)
+    const userId = authContext.user.id
+    dupReportService.applyVote(simReport, votedOption, userId)
       .then(result => {
         const updatedSimReport = result.data
         const updatedSimReports = simReports.map(item => {
@@ -46,7 +45,7 @@ export const SimilarityReportList = (props) => {
       })
   }
 
-  const simReportRowRenderer = simReport => {
+  const reportRowRenderer = simReport => {
     const voteItemClassName = value => "sr-vote-item " + (simReport["votedOption"] === value ? "selected" : "")
     return (
       <div className="sim-report-row">
@@ -61,25 +60,38 @@ export const SimilarityReportList = (props) => {
         <div className="sr-vote-container">
           <div className="sr-vote-check-container">
             <div className={voteItemClassName(1)}>
-              <button className="btn btn-outline-secondary btn-sm sr-vote-btn" onClick={() => applyVote(simReport, 1)}>
+              <button className="btn btn-outline-secondary btn-sm sr-vote-btn"
+                disabled={!authContext.isLoggedIn}
+                onClick={() => applyVote(simReport, 1)}>
                 {simReport["articleANbVotes"]}&nbsp;{iconRenderer(FaCheck, "#3571FF")}
               </button>
             </div>
             <div className={voteItemClassName(2)}>
-              <button className="btn btn-outline-secondary btn-sm sr-vote-btn" onClick={() => applyVote(simReport, 2)}>
+              <button className="btn btn-outline-secondary btn-sm sr-vote-btn"
+                disabled={!authContext.isLoggedIn}
+                onClick={() => applyVote(simReport, 2)}>
                 {simReport["articleBNbVotes"]}&nbsp;{iconRenderer(FaCheck, "#3571FF")}
               </button>
             </div>
           </div>
-          <div className={voteItemClassName(3)} onClick={() => applyVote(simReport, 3)}>
-            <button className="btn btn-outline-secondary btn-sm sr-vote-error-btn">{iconRenderer(FaTimes, "#EF5A5A")}</button>
+          <div className={voteItemClassName(3)}>
+            <button className="btn btn-outline-secondary btn-sm sr-vote-error-btn"
+              disabled={!authContext.isLoggedIn}
+              onClick={() => applyVote(simReport, 3)}>
+              {iconRenderer(FaTimes, "#EF5A5A")}
+            </button>
           </div>
-          <div className={voteItemClassName(4)} onClick={() => applyVote(simReport, 4)}>
-            <button className="btn btn-outline-secondary btn-sm sr-vote-irrelevant-btn">{iconRenderer(FaHashtag, "#F69E0C")}</button>
+          <div className={voteItemClassName(4)}>
+            <button className="btn btn-outline-secondary btn-sm sr-vote-irrelevant-btn"
+              disabled={!authContext.isLoggedIn}
+              onClick={() => applyVote(simReport, 4)}>
+              {iconRenderer(FaHashtag, "#F69E0C")}
+            </button>
           </div>
         </div>
         <div className="sr-domain-date">
           <div className="col-sm-6">
+
             <div className="row other">{simReport["domainA"]}</div>
             <div className="row other">{simReport["domainB"]}</div>
           </div>
@@ -95,7 +107,7 @@ export const SimilarityReportList = (props) => {
     )
   }
 
-  return <div className="sr-list-container">{simReports.map(item => simReportRowRenderer(item))}</div>
+  return <div className="sr-list-container">{simReports.map(item => reportRowRenderer(item))}</div>
 }
 
-export default SimilarityReportList
+export default DupReportList

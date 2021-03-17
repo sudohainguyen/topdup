@@ -1,6 +1,6 @@
-import React, { Component } from "react";
-import { FaFacebook, FaTwitter } from "react-icons/fa";
-import "./Footer.css";
+import React, { Component } from "react"
+import { FaFacebook, FaTwitter } from "react-icons/fa"
+import "./footer.css"
 
 class Footer extends Component {
   render() {
@@ -9,12 +9,12 @@ class Footer extends Component {
       { label: "Thành viên nhóm", link: "about/members" },
       { label: "Làm việc tại topDup", link: "about/work-opportunities" },
       { label: "Ra mắt topDup", link: "about/release" },
-    ];
+    ]
 
     const contactItems = [
       { label: "Điện thoại", link: "contact/phone" },
       { label: "Email", link: "about/email" },
-    ];
+    ]
 
     return (
       <footer className="footer">
@@ -82,8 +82,8 @@ class Footer extends Component {
           </div>
         </div>
       </footer>
-    );
+    )
   }
 }
 
-export default Footer;
+export default Footer
