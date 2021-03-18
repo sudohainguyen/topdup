@@ -1,5 +1,6 @@
 import os
 from copy import deepcopy
+from re import S
 
 import pandas as pd
 from fastapi import FastAPI, Response, status
@@ -95,22 +96,24 @@ def compare_(text_A: str, text_B: str):
     )
 
     # Maximize the sum of similiraties
-    row_idx, col_idx = linear_sum_assignment(
-        cosine_similarity(embedding_vectors_A, embedding_vectors_B), maximize=True
-    )
+    sim_matrix = cosine_similarity(embedding_vectors_A, embedding_vectors_B)
+    row_idx, col_idx = linear_sum_assignment(sim_matrix, maximize=True)
 
-    results = list()
+    pairs = list()
     for a, b in zip(row_idx, col_idx):
-        results.append(
+        pairs.append(
             {
-                "textA": s_text_A[a]["text"],
-                "textAIdx": s_text_A[a]["meta"]["_split_id"],
-                "textB": s_text_B[b]["text"],
-                "textBIdx": s_text_B[b]["meta"]["_split_id"],
+                "segmentIdxA": s_text_A[a]["meta"]["_split_id"],
+                "segmentIdxB": s_text_B[b]["meta"]["_split_id"],
+                "similarityScore": sim_matrix[a, b],
             }
         )
 
-    return results
+    return {
+        "segmentListA": [s["text"] for s in s_text_A],
+        "segmentListB": [s["text"] for s in s_text_B],
+        "pairs": pairs,
+    }
 
 
 @app.post(

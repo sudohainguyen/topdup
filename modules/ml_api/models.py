@@ -10,4 +10,4 @@ class CompareEntry(BaseModel):
 
 class QueryResult(BaseModel):
     message: str
-    results: List[dict] = None
+    results: dict = None
