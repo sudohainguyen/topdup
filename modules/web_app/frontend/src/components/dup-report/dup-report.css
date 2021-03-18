@@ -49,17 +49,13 @@
   min-width: 1000px;
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   margin-right: -15px;
   margin-left: -15px;
   padding-left: 30px;
   padding-right: 20px;
   padding-top: 10px;
   padding-bottom: 10px;
-  font-family: Inter;
-  font-style: normal;
-  font-weight: 500;
-  font-size: 18px;
-  line-height: 24px;
   letter-spacing: 0.03em;
   color: #000000;
   border-bottom: 2px solid rgba(223, 223, 223, 0.6);
@@ -76,7 +72,6 @@
   padding-right: 20px;
   padding-top: 10px;
   padding-bottom: 10px;
-  font-family: Inter;
   font-style: normal;
   font-weight: 600;
   font-size: 20px;
@@ -87,8 +82,8 @@
 
 .sr-title-container {
   margin-right: 5px;
-  max-width: 45%;
-  flex-grow: 1 !important;
+  max-width: 380px;
+  flex-grow: 2 !important;
 }
 
 .sr-header-title {
@@ -100,7 +95,6 @@
 .sr-title {
   padding-right: 10px;
   display: flex;
-  height: 30px;
   align-items: center;
 }
 
@@ -108,12 +102,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-family: Inter;
-  font-style: normal;
   font-weight: 500;
-  font-size: 18px;
-  line-height: 24px;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.05em;
   color: #000000;
 }
 
@@ -168,6 +158,9 @@
   border-style: hidden;
   text-align: right;
   width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .sr-vote-error-btn,
@@ -178,6 +171,9 @@
   padding: 1px 3px;
   border-style: hidden;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .sologan-container {
@@ -185,7 +181,6 @@
 }
 
 .sologan-heading {
-  font-family: Inter;
   font-style: normal;
   font-weight: bold;
   font-size: 40px;
@@ -197,7 +192,6 @@
 }
 
 .sologan-description {
-  font-family: Inter;
   font-style: normal;
   font-weight: normal;
   font-size: 18px;
@@ -222,7 +216,6 @@
 }
 
 .sologan-bottom {
-  font-family: Inter;
   font-style: normal;
   font-weight: normal;
   font-size: 24px;
@@ -233,7 +226,6 @@
 }
 
 .btn-volunteer {
-  font-family: Inter;
   font-style: normal;
   font-weight: bold;
   font-size: 12px;
@@ -246,7 +238,6 @@
 }
 
 .btn-register-bottom {
-  font-family: Inter;
   font-style: normal;
   font-weight: bold;
   font-size: 12px;
