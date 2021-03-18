@@ -51,10 +51,10 @@ export const DupReportList = (props) => {
       <div className="sim-report-row">
         <div className="sr-title-container">
           <div className="sr-title">
-            <span>{simReport["articleAId"]}{simReport["articleA"]}</span>
+            <span>{simReport["articleA"]}</span>
           </div>
           <div className="sr-title">
-            <span>{simReport["articleBId"]}{simReport["articleB"]}</span>
+            <span>{simReport["articleB"]}</span>
           </div>
         </div>
         <div className="sr-vote-container">

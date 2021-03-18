@@ -21,11 +21,10 @@ const NavigationBar = (props) => {
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="mr-auto" activeKey={location.pathname}></Nav>
             <Nav className="topdup-nav-items">
-              <Nav.Link href="/home">Trang chủ</Nav.Link>
-              <Nav.Link href="/dup-report">Dup Reports</Nav.Link>
-              <Nav.Link href="/dup-check">Dup Compare</Nav.Link>
-              <Nav.Link href="/dup-finder">Dup Finder</Nav.Link>
-              <Nav.Link href="/about">Về TopDup</Nav.Link>
+              <Nav.Link href="/about">Giới thiệu</Nav.Link>
+              <Nav.Link href="/dup-report">DupReport</Nav.Link>
+              <Nav.Link href="/dup-compare">DupCompare</Nav.Link>
+              {/* <Nav.Link href="/dup-finder">DupFinder</Nav.Link> */}
               <Authentication />
             </Nav>
           </Navbar.Collapse>

@@ -1,9 +1,9 @@
 import { createContext } from "react"
 
 export const AuthContext = createContext({
-    isLoggedIn: false,
+    isLoggedIn: localStorage['user'] ? true : false,
     taken: null,
-    user: null,
+    getUser: () => localStorage['user'],
     login: () => { },
     logout: () => { }
 })
