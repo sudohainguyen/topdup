@@ -32,8 +32,10 @@ function App() {
     localStorage.removeItem('user')
   }
 
+  const getUser = () => JSON.parse(localStorage['user'])
+
   return (
-    <AuthContext.Provider value={{ isLoggedIn: loggedIn, login: login, logout: logout, user: user }}>
+    <AuthContext.Provider value={{ isLoggedIn: loggedIn, login: login, logout: logout, getUser: getUser }}>
       <BrowserRouter>
         <div className="App">
           <NavigationBar setUserData={setUserData} userData={userData} isLoggedIn={token ? true : false} />

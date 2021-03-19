@@ -1,8 +1,8 @@
 import React, { useContext, useEffect, useState } from "react"
 import { IconContext } from "react-icons"
 import { FaCheck, FaHashtag, FaTimes } from "react-icons/fa"
-import { AuthContext } from "../auth/auth-context"
 import DupReportService from "./dup-report.service"
+import { AuthContext } from "../auth/auth-context"
 
 export const DupReportList = (props) => {
   const [simReports, setSimReports] = useState({ ...props.simReports })
@@ -30,19 +30,21 @@ export const DupReportList = (props) => {
   }
 
   const applyVote = (simReport, votedOption) => {
-    const userId = authContext.user.id
-    dupReportService.applyVote(simReport, votedOption, userId)
-      .then(result => {
-        const updatedSimReport = result.data
-        const updatedSimReports = simReports.map(item => {
-          if (item.id !== simReport.id) return item
-          return { ...item, ...updatedSimReport }
+    const user = authContext.getUser()
+    if (user) {
+      dupReportService.applyVote(simReport, votedOption, user.id)
+        .then(result => {
+          const updatedSimReport = result.data
+          const updatedSimReports = simReports.map(item => {
+            if (item.id !== simReport.id) return item
+            return { ...item, ...updatedSimReport }
+          })
+          setSimReports(updatedSimReports)
         })
-        setSimReports(updatedSimReports)
-      })
-      .catch(error => {
-        throw (error)
-      })
+        .catch(error => {
+          throw (error)
+        })
+    }    
   }
 
   const reportRowRenderer = simReport => {
