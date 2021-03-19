@@ -123,34 +123,40 @@ def compare_(text_A: str, text_B: str):
     tags=["compare"],
 )
 def compare(entry: CompareEntry, response: Response):
-    if entry.mode == "url":
+    if entry.pairs[0].mode == "url":
         text_A = pd.read_sql_query(
-            URL_QUERY.format(entry.pairs[0], EDIT_DISTANCE_THRESHOLD),
+            URL_QUERY.format(entry.pairs[0].content, EDIT_DISTANCE_THRESHOLD),
             con=remote_doc_store.engine,
         )
-        text_B = pd.read_sql_query(
-            URL_QUERY.format(entry.pairs[1], EDIT_DISTANCE_THRESHOLD),
-            con=remote_doc_store.engine,
-        )
-
-        if (not text_A.empty) & (not text_B.empty):
-            results = compare_(text_A.values[0][0], text_A.values[0][0])
-            return {
-                "message": "Successfully requested TopDup-ML [compare]",
-                "results": results,
-            }
-        else:
+        if text_A.empty:
             response.status_code = status.HTTP_400_BAD_REQUEST
             return {"message": "We cannot find your URLs"}
-    elif entry.mode == "text":
-        results = compare_(entry.pairs[0], entry.pairs[1])
-        return {
-            "message": "Successfully requested TopDup-ML [compare]",
-            "results": results,
-        }
+        else:
+            text_A = text_A.values[0][0]
+    elif entry.pairs[0].mode == "text":
+        text_A = entry.pairs[0].content
     else:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return {"message": "Invalid input mode, either url or text"}
+
+    if entry.pairs[1].mode == "url":
+        text_B = pd.read_sql_query(
+            URL_QUERY.format(entry.pairs[1].content, EDIT_DISTANCE_THRESHOLD),
+            con=remote_doc_store.engine,
+        )
+        if text_B.empty:
+            response.status_code = status.HTTP_400_BAD_REQUEST
+            return {"message": "We cannot find your URLs"}
+        else:
+            text_B = text_B.values[0][0]
+    elif entry.pairs[1].mode == "text":
+        text_B = entry.pairs[1].content
+    else:
+        response.status_code = status.HTTP_400_BAD_REQUEST
+        return {"message": "Invalid input mode, either url or text"}
+
+    results = compare_(text_A, text_B)
+    return {"message": "Successfully requested TopDup-ML [compare]", "results": results}
 
 
 @app.exception_handler(RequestValidationError)

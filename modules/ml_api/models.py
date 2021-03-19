@@ -3,9 +3,13 @@ from typing import List
 from pydantic import BaseModel
 
 
-class CompareEntry(BaseModel):
+class CompareSingleEntry(BaseModel):
     mode: str
-    pairs: List[str]
+    content: str
+
+
+class CompareEntry(BaseModel):
+    pairs: List[CompareSingleEntry]
 
 
 class QueryResult(BaseModel):
