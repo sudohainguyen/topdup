@@ -11,6 +11,10 @@ import DupReport from '../dup-report/dup-report'
 import Footer from '../footer/footer'
 import NavigationBar from '../navigation-bar/navigation-bar'
 import Preferences from '../preferences'
+import About from '../about'
+import TermCondition from '../term-condition'
+import PrivacyPolicy from '../privacy-policy'
+import Address from '../address'
 
 function App() {
   const { userData, setUserData } = useUserData()
@@ -32,14 +36,20 @@ function App() {
     localStorage.removeItem('user')
   }
 
+  const getUser = () => JSON.parse(localStorage['user'])
+
   return (
-    <AuthContext.Provider value={{ isLoggedIn: loggedIn, login: login, logout: logout, user: user }}>
+    <AuthContext.Provider value={{ isLoggedIn: loggedIn, login: login, logout: logout, getUser: getUser }}>
       <BrowserRouter>
         <div className="App">
           <NavigationBar setUserData={setUserData} userData={userData} isLoggedIn={token ? true : false} />
           <div className="page-content">
             <Switch>
               <Redirect exact from="/" to="/dup-report" />
+              <Route exact path="/about" component={About} />
+              <Route exact path="/contact" component={Address} />
+              <Route exact path="/privacy-policy" component={PrivacyPolicy} />
+              <Route exact path="/term-condition" component={TermCondition} />
               <Route exact path="/dashboard" component={Dashboard} />
               <Route exact path="/preferences" component={Preferences} />
               <Route exact path="/dup-report" component={DupReport} />

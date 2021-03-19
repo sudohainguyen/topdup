@@ -12,8 +12,7 @@ class Footer extends Component {
     // ]
 
     const contactItems = [
-      { label: "Điện thoại", link: "contact/phone" },
-      { label: "Email", link: "about/email" },
+      { label: "Thông tin liên lạc", link: "/contact" }
     ]
 
     return (
@@ -27,12 +26,12 @@ class Footer extends Component {
               <div className="layout-grid margin-bottom--xs">Mang đến một cộng đồng sáng tạo và đầy nhiệt huyết</div>
               <div className="layout-grid">
                 <div className="layout-cell">
-                  <a href="contact/facebook" className="footer-link">
+                  <a href="/contact/facebook" className="footer-link">
                     <FaFacebook />
                   </a>
                 </div>
                 <div className="layout-cell">
-                  <a href="contact/twitter" className="footer-link">
+                  <a href="/contact/twitter" className="footer-link">
                     <FaTwitter />
                   </a>
                 </div>
@@ -71,12 +70,12 @@ class Footer extends Component {
           <div>@topDup, 2021.</div>
           <div className="flex-fill"></div>
           <div className="layout-cell" style={{ marginRight: "10px" }}>
-            <a href="privacy-policy" className="footer-link">
+            <a href="/privacy-policy" className="footer-link">
               Chính sách bảo mật
             </a>
           </div>
           <div className="layout-cell">
-            <a href="terms-conditions" className="footer-link">
+            <a href="/terms-conditions" className="footer-link">
               Điều khoản
             </a>
           </div>
