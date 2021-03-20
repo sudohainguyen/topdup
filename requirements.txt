@@ -35,3 +35,6 @@ jsonpickle
 # for unit test
 pytest
 pytest-mock
+
+# for cronjobs
+schedule

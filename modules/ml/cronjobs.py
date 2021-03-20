@@ -25,7 +25,7 @@ RTRV_DIM = 1024
 HARD_SIM_THRESHOLD = 0.5
 CAND_PATH = os.getenv("CAND_PATH", "cand.bin")
 RTRV_PATH = os.getenv("RTRV_PATH", "rtrv.bin")
-INDEX = os.getenv("INDEX", "document")
+INDEX = "document"
 LOCAL_IDX_PATH = os.getenv("LOCAL_IDX_PATH", "local_index.bin")
 REMOTE_IDX_PATH = os.getenv("REMOTE_IDX_PATH", "remote_index.bin")
 
