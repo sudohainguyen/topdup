@@ -19,6 +19,8 @@ logger = logging.getLogger(__name__)
 
 Base = declarative_base()  # type: Any
 
+WHITELIST = ["genk", "cafebiz"]
+
 
 class ORMBase(Base):
     __abstract__ = True
@@ -193,6 +195,8 @@ class SQLDocumentStore(BaseDocumentStore):
 
             domain_A = meta_parser("domain", meta_A).lower()
             domain_B = meta_parser("domain", meta_B).lower()
+            domain_A = "domain" if domain_A in WHITELIST else domain_A
+            domain_B = "domain" if domain_B in WHITELIST else domain_B
             if domain_A != domain_B:  # rule defined by the PO
                 documents.append((meta_A, meta_B))
 
