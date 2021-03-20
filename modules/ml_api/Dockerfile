@@ -10,6 +10,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Grab these via Python's os.environ
 # These are 100% optional here
 ENV PORT=8000
+ENV PYTHONPATH "${PYTHONPATH}:/var/app"
 ENV CAND_PATH=/artifacts/cand.bin
 
 # Create and set working directory
@@ -52,5 +53,4 @@ RUN pip3 install -r requirements.txt
 # Run the API
 EXPOSE $PORT
 WORKDIR /var/app
-RUN export PYTHONPATH=$PYTHONPATH:`pwd`
 CMD gunicorn modules.ml_api.main:app --max-requests 100 -b 0.0.0.0:$PORT -w 4 -k uvicorn.workers.UvicornWorker -t 60
