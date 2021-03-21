@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 import pandas as pd
 import schedule
 from sqlalchemy.exc import ProgrammingError
-from sqlalchemy.orm.relationships import remote
 from tqdm.auto import tqdm
 
 from modules.ml.document_store.faiss import FAISSDocumentStore

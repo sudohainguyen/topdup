@@ -1,7 +1,6 @@
 import logging
-from typing import List
+from typing import Any, Dict, List, Tuple
 
-import numpy as np
 from tqdm import tqdm
 
 from modules.ml.document_store.faiss import FAISSDocumentStore

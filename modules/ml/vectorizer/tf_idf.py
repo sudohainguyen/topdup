@@ -1,10 +1,10 @@
 import pickle
-from ast import dump
+from typing import List
 
 import numpy as np
-from numpy.lib.function_base import vectorize
 from sklearn.feature_extraction.text import TfidfVectorizer
 
+from modules.ml.schema import Document
 from modules.ml.vectorizer.base import DocVectorizerBase
 
 
