@@ -24,20 +24,20 @@ RTRV_DIM = 1024
 EDIT_DISTANCE_THRESHOLD = 0.25
 CAND_PATH = os.getenv("CAND_PATH", "cand.bin")
 URL_QUERY = """
-            SELECT text_original
-            FROM (
-                SELECT value AS url
-                    ,document_id
-                FROM meta m
-                WHERE lower(name) IN (
-                        'href'
-                        ,'url'
-                        )
-                ) AS url_table
-            INNER JOIN "document" d ON url_table.document_id = d.id
-            WHERE CAST(levenshtein('{0}', url) AS DECIMAL) / CAST(length(url) AS DECIMAL) < {1}
-            ORDER BY levenshtein('{0}', url) LIMIT 1
-            """
+    SELECT text_original
+    FROM (
+        SELECT value AS url
+            ,document_id
+        FROM meta m
+        WHERE lower(name) IN (
+                'href'
+                ,'url'
+                )
+        ) AS url_table
+    INNER JOIN "document" d ON url_table.document_id = d.id
+    WHERE CAST(levenshtein('{0}', url) AS DECIMAL) / CAST(length(url) AS DECIMAL) < {1}
+    ORDER BY levenshtein('{0}', url) LIMIT 1
+"""
 
 # Default methods
 preprocessor = ViPreProcessor(split_by="sentence")

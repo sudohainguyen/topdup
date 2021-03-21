@@ -12,8 +12,6 @@ from modules.ml.plugins.vncorenlp import VnCoreNLPSingleton
 from .base import BasePreProcessor
 from .cleaning import normalize_text
 
-nltk.download("punkt")
-
 logger = logging.getLogger(__name__)
 
 
@@ -29,6 +27,7 @@ class ViPreProcessor(BasePreProcessor):
         """
         :param use_fixed_stopwords: remove stopwords that appears in pre-defined files
         """
+        nltk.download("punkt")
         self.rdrsegmenter = VnCoreNLPSingleton.get_instance()
 
         self.use_fixed_stopwords = use_fixed_stopwords
