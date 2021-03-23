@@ -21,7 +21,7 @@ class Footer extends Component {
           <div className="layout-grid">
             <div className="col-sm">
               <div className="layout-grid margin-bottom--xs">
-                <span className="topdup-label">topDup</span>
+                <span className="topdup-label">TopDup</span>
               </div>
               <div className="layout-grid margin-bottom--xs">Mang đến một cộng đồng sáng tạo và đầy nhiệt huyết</div>
               <div className="layout-grid">
@@ -37,18 +37,6 @@ class Footer extends Component {
                 </div>
               </div>
             </div>
-            {/* <div className="col-sm">
-              <div className="layout-grid">
-                <span>Về topDup</span>
-              </div>
-              {aboutItems.map((item) => (
-                <div className="layout-grid">
-                  <a className="footer-link" href={item.link}>
-                    {item.label}
-                  </a>
-                </div>
-              ))}
-            </div> */}
             <div className="col-sm">
               <div className="layout-grid">
                 <span>Liên lạc</span>
@@ -67,7 +55,7 @@ class Footer extends Component {
           <hr style={{ height: "1px", backgroundColor: "white", margin: "20px 0px" }} />
         </div>
         <div className="container layout-grid">
-          <div>@topDup, 2021.</div>
+          <div>@TopDup, 2021.</div>
           <div className="flex-fill"></div>
           <div className="layout-cell" style={{ marginRight: "10px" }}>
             <a href="/privacy-policy" className="footer-link">

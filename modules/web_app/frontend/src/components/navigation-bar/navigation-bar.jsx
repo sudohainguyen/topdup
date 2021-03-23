@@ -24,7 +24,6 @@ const NavigationBar = (props) => {
               <Nav.Link href="/about">Giới thiệu</Nav.Link>
               <Nav.Link href="/dup-report">DupReport</Nav.Link>
               <Nav.Link href="/dup-compare">DupCompare</Nav.Link>
-              {/* <Nav.Link href="/dup-finder">DupFinder</Nav.Link> */}
               <Authentication />
             </Nav>
           </Navbar.Collapse>
