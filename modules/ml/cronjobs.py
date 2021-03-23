@@ -63,16 +63,17 @@ def update_local_db(local_doc_store, remote_doc_store):
             return
 
     remote_reindex = not os.path.exists(REMOTE_IDX_PATH)
+    now = datetime.now()
     if remote_reindex:
         new_ids = remote_doc_store.get_document_ids(
-            from_time=datetime.now() - timedelta(days=365), index=INDEX
+            from_time=now - timedelta(days=365), index=INDEX
         )
     else:
         new_ids = remote_doc_store.get_document_ids(
-            from_time=datetime.now() - timedelta(minutes=3), index=INDEX
+            from_time=now - timedelta(minutes=3), index=INDEX
         )
     if not new_ids:
-        logger.info(f"No new updates in local db at {datetime.now()}")
+        logger.info(f"No new updates in local db at {now}")
         return
 
     local_ids = local_doc_store.get_document_ids(index=INDEX)
