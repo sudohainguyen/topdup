@@ -149,5 +149,6 @@ cython_debug/
 tags
 
 .vscode/
+.idea/
 *.db
 *.pkl
