@@ -400,8 +400,15 @@ class SQLDocumentStore(BaseDocumentStore):
         to_time: datetime = None,
         index: Optional[str] = None,
     ) -> List[str]:
-        """
-        Return the list of document ids in the DocumentStore.
+        """Return list of document ids in the DocumentStore.
+
+        Args:
+            from_time (datetime, optional). Defaults to None.
+            to_time (datetime, optional). Defaults to None.
+            index (str, optional): Specify an index name if needed. Defaults to None.
+
+        Returns:
+            List[str]: List of document ids only
         """
         if not from_time and not to_time:  # get all
             query = self.session.query(DocumentORM.id).filter_by(index=index)

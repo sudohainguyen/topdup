@@ -10,10 +10,13 @@ from modules.ml.vectorizer.base import DocVectorizerBase
 
 class TfidfDocVectorizer(DocVectorizerBase):
     def __init__(self, vector_dim: int = 128, **kwargs):
-        """Vectorize the documents and return a vector that has been embedding for indexer or comparison.
+        """
+        Vectorize the documents and return a vector that has been embedding
+        for indexer or comparison.
 
         Args:
-            vector_dim (int): Number dimentions of embedding vectors for 1st phase. Defaults to 128.
+            vector_dim (int): Number dimentions of embedding vectors for 1st phase.
+                              Defaults to 128.
             **kwargs: Arbitrary keyword arguments.
         """
 
@@ -23,14 +26,15 @@ class TfidfDocVectorizer(DocVectorizerBase):
         self.is_trained = False
         self.vector_dim = vector_dim
 
-    def fit(self, train_documents: list = None):
+    def fit(self, train_documents: list = None) -> TfidfVectorizer:
         """Fit `train_documents` into the tf-idf and return tfidf vectorizer.
 
         Args:
-            train_documents (list): List of training documents for vectorizer. Defaults to None.
+            train_documents (list): List of training documents for vectorizer.
+                Defaults to None.
 
         Returns:
-            Tf idf vectorizer what is trained.
+            Tf-IDF vectorizers trained from given docs.
         """
 
         vectorizer = self.vectorizer.fit(train_documents)
@@ -71,14 +75,15 @@ class TfidfDocVectorizer(DocVectorizerBase):
 
         return transform_vectors
 
-    def transform_document_objects(self, documents):
-        """[summary]
+    def transform_document_objects(self, documents: List[Document]) -> np.ndarray:
+        """
+        Transform given list of Document object
 
         Args:
-            documents ([type]): [description]
+            documents (List[Document])
 
         Returns:
-            [type]: [description]
+            np.ndarray: Embeddings
         """
 
         document_text = [document.text for document in documents]
@@ -108,6 +113,5 @@ class TfidfDocVectorizer(DocVectorizerBase):
         # with open(model_path, "rb") as f:
         #     tfidf_vectorizer = pickle.load(f)
         tfidf_vectorizer = pickle.load(open(model_path, "rb"))
-        print(type(tfidf_vectorizer))
 
         return tfidf_vectorizer

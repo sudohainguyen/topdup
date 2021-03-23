@@ -22,13 +22,14 @@ class Document:
         Note that there can be multiple Documents originating from one file (e.g. PDF),
         if you split the text into smaller passages. We'll have one Document per passage in this case.
 
-        :param id: ID used within the DocumentStore
-        :param text: Text of the document
-        :param score: Retriever's query score for a retrieved document
-        :param probability: a pseudo probability by scaling score in the range 0 to 1
-        :param question: Question text for FAQs.
-        :param meta: Meta fields for a document like name, url, or author.
-        :param embedding: Vector encoding of the text
+        Args:
+            text (str): Text of the document
+            id (str, optional): ID used within the DocumentStore. Defaults to None.
+            score (float, optional): Retriever's query score for a retrieved document. Defaults to None.
+            meta (Dict[str, Any], optional): Meta fields for a document like name, url, or author.. Defaults to None.
+            embedding (np.array, optional): Vector encoding of the text. Defaults to None.
+            vector_id (str, optional): ID of the corresponding vector representing the document. Defaults to None.
+
         """
 
         self.text = text

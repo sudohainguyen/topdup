@@ -25,7 +25,23 @@ class ViPreProcessor(BasePreProcessor):
         split_respect_sentence_boundary: Optional[bool] = True,
     ):
         """
-        :param use_fixed_stopwords: remove stopwords that appears in pre-defined files
+        Args:
+            use_fixed_stopwords (bool, optional): remove stopwords that appears in pre-defined files.
+                                                  Defaults to False.
+            split_by (str, optional): Unit for splitting the document. Can be "word", "sentence", or "passage".
+                                      Set `None` to disable spliting. Defaults to "word".
+            split_length (int, optional): Max. number of the above split unit (e.g. words) that are allowed in one document.
+                                          Defaults to 1000.
+            split_overlap (int, optional): Word overlap between two adjacent documents after a split.
+                              Setting this to a positive number essentially enables the sliding window approach.
+                              For example, if split_by -> `word`,
+                              split_length -> 5 & split_overlap -> 2, then the splits would be like:
+                              [w1 w2 w3 w4 w5, w4 w5 w6 w7 w8, w7 w8 w10 w11 w12].
+                              Set the value to None to ensure there is no overlap among the documents after splitting.
+                              Defaults to None.
+            split_respect_sentence_boundary (bool, optional): Whether to split in partial sentences if split_by -> `word`. If set
+                                                              to True, the individual split will always have complete sentences &
+                                                              the number of words will be <= split_length.. Defaults to True.
         """
         nltk.download("punkt")
         self.rdrsegmenter = VnCoreNLPSingleton.get_instance()
@@ -41,7 +57,8 @@ class ViPreProcessor(BasePreProcessor):
             self._load_stopwords()
 
     def clean(self, document: Dict[str, Any]) -> Dict[str, Any]:
-        """Perform document cleaning on a single document and return a single document.
+        """
+        Perform document cleaning on a single document and return a single document.
         Includes dealing with whitespaces, empty lines.
         """
         text = document["text"]
@@ -145,7 +162,9 @@ class ViPreProcessor(BasePreProcessor):
         return documents
 
     def _word_segment(self, text: str) -> str:
-        """Use VnCoreNLP-based tokenizer for word segmentation"""
+        """
+        Use VnCoreNLP-based tokenizer for word segmentation
+        """
         sentences = self.rdrsegmenter.tokenize(text)
 
         tokenized_sents = []
@@ -176,7 +195,8 @@ class ViPreProcessor(BasePreProcessor):
 
 
 def _clean_vncore_result(text: str) -> str:
-    """Clean special cases caused by VnCoreNLP
+    """
+    Clean special cases caused by VnCoreNLP
     Example: "cho đến thời_điểm này , có_thể nói ,"
     """
     text = re.sub(r"\s([?.!,](?:\s|$))", r"\1", text)
