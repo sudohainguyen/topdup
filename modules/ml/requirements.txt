@@ -1,0 +1,14 @@
+sqlalchemy-utils==0.36.8
+more-itertools==8.6.0
+jsonpickle==1.5.1
+nltk==3.5
+vncorenlp==1.0.3
+pandas==1.2.3
+scikit-learn==0.24.1
+tika==1.24
+schedule==1.0.0
+faiss-cpu==1.6.3; sys_platform != 'win32' and sys_platform != 'cygwin'
+psycopg2-binary==2.8.6; sys_platform != 'win32' and sys_platform != 'cygwin'
+uvloop==0.15.2; sys_platform != 'win32' and sys_platform != 'cygwin'
+httptools==0.1.1
+spacy==3.0.3

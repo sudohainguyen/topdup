@@ -1,0 +1,13 @@
+# code styling
+black==20.8b1
+flake8==3.7.9
+mypy==0.761
+qcore==0.5.1
+isort==5.7.0
+pre-commit==2.11.1
+tox==3.21.2
+coverage==5.3.1
+
+# for unit test
+pytest==6.2.2
+pytest-mock==3.5.1
