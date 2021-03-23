@@ -167,13 +167,26 @@
 .sr-vote-irrelevant-btn {
   margin-left: 5px;
   width: 50px;
+  height: 30px;
   font-size: 18px;
   padding: 1px 3px;
   border-style: hidden;
   text-align: center;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
+}
+
+.sr-vote-btn.disabled {
+  pointer-events: auto;
+}
+
+.sr-vote-error-btn.disabled {
+  pointer-events: auto;
+}
+
+.sr-vote-irrelevant-btn.disabled {
+  pointer-events: auto;
 }
 
 .sologan-container {
@@ -248,6 +261,10 @@
   border-radius: 5px;
   padding: 7px;
   border: 1px solid gray;
+}
+
+.btn-register-bottom:hover {
+  color: lightgray;
 }
 
 .pagination-btn {

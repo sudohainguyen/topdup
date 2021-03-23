@@ -1,18 +1,10 @@
 import { of } from 'rxjs'
+import api from '../../api'
 
 class DupCompareService {
-  getSimilarityResults = (sourceContent, targetContent) => {
-    const sourceParagraphs = sourceContent.split('\n')
-    const targetParagraphs = targetContent.split('\n')
-    const minLength = sourceParagraphs.length < targetParagraphs.length
-      ? sourceParagraphs.length
-      : targetParagraphs.length
-    return of({
-      pairs: [...Array(minLength)].map((_, idx) => ({
-        source: sourceParagraphs[idx],
-        target: targetParagraphs[idx]
-      }))
-    })
+  getSimilarityResults = (compareOption) => {
+    const apiUrl = '/api/v1/dup-compare/compare'
+    return api.post(apiUrl, compareOption)
   }
 }
 

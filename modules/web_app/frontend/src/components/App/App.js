@@ -1,5 +1,6 @@
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'font-awesome/css/font-awesome.min.css'
+import './App.css'
 import React, { useContext, useState } from "react"
 import { BrowserRouter, Redirect, Route, Switch } from "react-router-dom"
 import { ToastContainer } from 'react-toastify'
