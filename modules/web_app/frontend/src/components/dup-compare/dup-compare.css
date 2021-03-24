@@ -1,10 +1,8 @@
-.sim-check-container {
-  min-width: 80%;
-  max-width: 90%;
+.dup-compare-container {
+  width: 1200px;
 }
 
-.sim-check-title {
-  font-family: Prompt;
+.dup-compare-title {
   font-style: normal;
   font-weight: bold;
   font-size: 36px;
@@ -17,4 +15,8 @@
   display: flex;
   font-family: inherit;
   align-items: center;
+}
+
+span {
+  font-weight: 400 !important;
 }

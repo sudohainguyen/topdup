@@ -6,7 +6,7 @@ const cors = require("cors")
 // import hpp from 'hpp'
 // import xXssProtection from "x-xss-protection"
 require('dotenv').config()
-export const app = express()
+const app = express()
 const port = process.env.PORT || "5000"
 app.use(cors())
 app.options('*', cors())  // enable pre-flight
@@ -89,5 +89,5 @@ process.on('unhandledRejection', error => {
 })
 server.listen(port)
 
-
-export default app
+exports.app = app
+exports.server = server

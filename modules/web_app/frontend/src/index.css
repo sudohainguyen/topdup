@@ -88,8 +88,8 @@ span {
   display: flex;
   justify-content: center;
   margin-top: 70px;
-  margin-left: 200px;
-  margin-right: 200px;
+  max-width: 1200px;
+  overflow: auto;
   padding-top: 50px;
   padding-bottom: 50px;
 }

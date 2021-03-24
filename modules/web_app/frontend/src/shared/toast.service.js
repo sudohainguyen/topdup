@@ -17,13 +17,13 @@ export class ToastService {
     const message = resContent.message || reponse.message
     switch (severity) {
       case Severity.Success:
-        toast.success('✔️' + message, this.toastDisplayOption)
+        toast.success('✔️ ' + message, this.toastDisplayOption)
         break
       case Severity.Warning:
-        toast.warning('⚠️' + message, this.toastDisplayOption)
+        toast.warning('⚠️ ' + message, this.toastDisplayOption)
         break
       case Severity.Error:
-        toast.error('❌' + message, this.toastDisplayOption)
+        toast.error('❌ ' + message, this.toastDisplayOption)
         break
       default:
         toast.info(message, this.toastDisplayOption)

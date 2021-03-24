@@ -16,10 +16,15 @@ class DupReport extends Component {
       userData: props.userData,
       setUserData: props.setUserData,
       simReports: [],
+      allReports: [],
       reportsPerPage: 8,
       loading: false,
       currentPage: 1,
-      currentMode: "list"
+      searchObj: {
+        titleSearchT: '',
+        domainSearchT: '',
+        dateRangeSearch: []
+      }
     }
   }
 
@@ -35,11 +40,38 @@ class DupReport extends Component {
       .then(results => {
         this.setState({ loading: false })
         this.setState({ simReports: results })
+        this.setState({ allReports: results })
       })
   };
 
+  onChangeSearchObject = (searchObj) => {
+    this.setState({ searchObj: searchObj })
+    const { titleSearchT, domainSearchT, dateRangeSearch } = searchObj
+    const allReports = this.state.allReports
+    const stringSearch = (str, searchT) => !searchT || str.toLowerCase(str).includes(searchT.toLowerCase())
+    const filteredReports = allReports.filter(report => {
+      const titleOK = stringSearch(report.articleA, titleSearchT) || stringSearch(report.articleB, titleSearchT)
+      const domainOK = stringSearch(report.domainA, domainSearchT) || stringSearch(report.domainB, domainSearchT)
+      let dateRangeOK = true
+      if (dateRangeSearch.length === 2) {
+        const beginDate = new Date(dateRangeSearch[0])
+        const endDate = new Date(dateRangeSearch[1])
+        const dateA = new Date(report.createdDateA)
+        const dateB = new Date(report.createdDateB)
+        dateRangeOK = (beginDate <= dateA && dateA <= endDate) || (beginDate <= dateB && dateB <= endDate)
+      }
+      return titleOK && domainOK && dateRangeOK
+    })
+    this.setState(prevState => ({
+      ...prevState,
+      simReports: filteredReports,
+      currentPage: 1
+    }))
+  }
+
   render() {
-    const { simReports, currentMode, reportsPerPage, loading, currentPage } = this.state
+    console.log('Dup report - rerendered')
+    const { simReports, reportsPerPage, loading, currentPage, searchObj } = this.state
 
     const indexOfLastReport = reportsPerPage * currentPage
     const indexOfFirstReport = reportsPerPage * (currentPage - 1)
@@ -48,13 +80,20 @@ class DupReport extends Component {
     const nextPage = () => this.setState({ currentPage: currentPage + 1 })
     const prevPage = () => this.setState({ currentPage: currentPage - 1 })
 
+    const updateVotedReport = (report) => {
+      const allReports = this.state.allReports
+      const newAllReports = allReports.map(item => item.id === report.id ? report : item)
+      this.setState({ allReports: newAllReports })
+      this.onChangeSearchObject(searchObj)
+    }
+
     const listView = (
       <div className="sim-reports-container">
         <div className="sr-list-with-header">
-          <HeaderRow />
-          <DupReportList setUserData={this.props.setUserData}
-            userData={this.props.userData}
+          <HeaderRow searchObjectChanged={this.onChangeSearchObject} searchObj={searchObj} />
+          <DupReportList
             simReports={currentSimReports}
+            reportVoted={updateVotedReport}            
             loading={loading} />
         </div>
         <Pagination
@@ -82,9 +121,6 @@ class DupReport extends Component {
             Bạn muốn trở thành tình nguyện viên của topDup? <br /> Hoặc đăng ký nhận thông báo khi website bị sao chép.
           </div>
           <div className="sologan-bottom">
-            <button type="button" className="btn btn-volunteer layout-cell">
-              Nộp Đơn TNV
-            </button>
             <button type="button" className="btn btn-register-bottom">
               Đăng Ký WEBSITE
             </button>
