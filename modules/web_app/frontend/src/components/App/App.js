@@ -15,6 +15,7 @@ import Preferences from '../preferences'
 import About from '../about'
 import TermCondition from '../term-condition'
 import PrivacyPolicy from '../privacy-policy'
+import ErrorPage from '../error-page/error-page'
 import Address from '../address'
 
 function App() {
@@ -57,6 +58,7 @@ function App() {
               <Route exact path="/dup-report/:id" component={DupReport} />
               <Route exact path="/dup-compare" component={() => <DupCompare />} />
               <Route exact path="/dup-finder" component={() => <DupCompare />} />
+              <Route component={ErrorPage}/>
             </Switch>
           </div>
           <ToastContainer />
