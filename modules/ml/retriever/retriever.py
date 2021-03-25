@@ -30,9 +30,9 @@ class Retriever:
                                                  CANDIDATE documents to embeddings. Defaults to None.
         """
 
-        self.document_store = document_store
-        self.candidate_vectorizer = candidate_vectorizer
-        self.retriever_vectorizer = retriever_vectorizer
+        self.document_store: FAISSDocumentStore = document_store
+        self.candidate_vectorizer: DocVectorizerBase = candidate_vectorizer
+        self.retriever_vectorizer: DocVectorizerBase = retriever_vectorizer
 
         if not self.document_store:
             raise ValueError(

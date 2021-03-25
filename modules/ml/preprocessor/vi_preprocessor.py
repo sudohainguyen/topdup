@@ -52,7 +52,7 @@ class ViPreProcessor(BasePreProcessor):
         self.split_overlap = split_overlap
         self.split_respect_sentence_boundary = split_respect_sentence_boundary
 
-        self.stopwords = None
+        self.stopwords: List[str]
         if use_fixed_stopwords:
             self._load_stopwords()
 
