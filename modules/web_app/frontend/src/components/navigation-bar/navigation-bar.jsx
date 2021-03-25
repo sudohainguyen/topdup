@@ -1,15 +1,15 @@
-import React from "react";
-import { Container, Nav, Navbar } from "react-bootstrap";
-import { useLocation, NavLink } from "react-router-dom";
-import Authentication from "../auth/auth";
-import "./navigation-bar.css";
+import React from "react"
+import { Container, Nav, Navbar } from "react-bootstrap"
+import { useLocation, NavLink } from "react-router-dom"
+import Authentication from "../auth/auth"
+import "./navigation-bar.css"
 
 const NavigationBar = (props) => {
-  const location = useLocation();
+  const location = useLocation()
   const logOut = () => {
-    props.setUserData();
-    window.location.assign("/");
-  };
+    props.setUserData()
+    window.location.assign("/")
+  }
 
   return (
     <>
@@ -39,4 +39,4 @@ const NavigationBar = (props) => {
   );
 };
 
-export default NavigationBar;
+export default NavigationBar
