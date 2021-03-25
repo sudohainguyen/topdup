@@ -154,3 +154,6 @@ tags
 *.db
 *.pkl
 *.bin*
+
+# ignore mockup pickle files
+*.test_pkl
