@@ -11,7 +11,7 @@ class Document:
         id: Optional[str] = None,
         score: Optional[float] = None,
         meta: Dict[str, Any] = None,
-        embedding: Optional[np.array] = None,
+        embedding: Optional[np.array] = None,  # type: ignore
         vector_id: str = None,
     ):
         """
