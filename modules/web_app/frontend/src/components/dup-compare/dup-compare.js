@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react"
+import * as _ from 'lodash'
+import { useEffect, useState } from "react"
+import { useLocation } from "react-router-dom"
+import { Severity } from "../../shared/constants"
+import { ToastService } from "../../shared/toast.service"
 import "./dup-compare.css"
 import DupCompareService from "./dup-compare.service"
-import { ToastService } from "../../shared/toast.service"
-import { Severity } from "../../shared/constants"
-import { useLocation } from "react-router-dom"
-import * as _ from 'lodash'
 
 const Mode = {
   Text: 'text',
@@ -13,7 +13,7 @@ const Mode = {
 
 const DupCompare = (props) => {
   const routeInfo = useLocation()
-  const passedState = routeInfo.state
+  const passedState = routeInfo.state || {}
   const { urlA, urlB } = passedState
   const defaultModeA = urlA ? Mode.Url : Mode.Text
   const defaultModeB = urlB ? Mode.Url : Mode.Text
