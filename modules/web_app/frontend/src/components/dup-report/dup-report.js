@@ -93,7 +93,7 @@ class DupReport extends Component {
           <HeaderRow searchObjectChanged={this.onChangeSearchObject} searchObj={searchObj} />
           <DupReportList
             simReports={currentSimReports}
-            reportVoted={updateVotedReport}            
+            reportVoted={updateVotedReport}
             loading={loading} />
         </div>
         <Pagination
@@ -110,21 +110,11 @@ class DupReport extends Component {
     return (
       <div>
         <div className="sologan-container">
-          <div className="sologan-heading">Bảo vệ nội dung công sức của bạn</div>
+          <div className="sologan-heading">Bảo vệ nội dung của bạn</div>
           <div className="sologan-description">Nhận thông báo khi nội dung của bạn bị sao chép.</div>
         </div>
         <div style={{ width: "100%", height: "900px" }}>
           {listView}
-        </div>
-        <div className="sologan-bottom-container">
-          <div className="sologan-bottom">
-            Bạn muốn trở thành tình nguyện viên của topDup? <br /> Hoặc đăng ký nhận thông báo khi website bị sao chép.
-          </div>
-          <div className="sologan-bottom">
-            <button type="button" className="btn btn-register-bottom">
-              Đăng Ký WEBSITE
-            </button>
-          </div>
         </div>
       </div>
     )
