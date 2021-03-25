@@ -1,3 +1,4 @@
+# this requirements is about packages for development purposes
 # code styling
 black==20.8b1
 flake8==3.7.9
