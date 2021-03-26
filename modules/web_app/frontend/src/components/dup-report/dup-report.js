@@ -111,7 +111,7 @@ class DupReport extends Component {
       <div>
         <div className="sologan-container">
           <div className="slogan-heading">Bảo vệ nội dung của bạn</div>
-          <div className="sologan-description">Nhận thông báo khi nội dung của bạn bị sao chép.</div>
+          <div className="slogan-description">Nhận thông báo khi nội dung của bạn bị sao chép.</div>
         </div>
         <div style={{ width: "100%", height: "900px" }}>
           {listView}
