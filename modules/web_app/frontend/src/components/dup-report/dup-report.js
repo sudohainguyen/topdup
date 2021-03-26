@@ -109,7 +109,7 @@ class DupReport extends Component {
 
     return (
       <div>
-        <div className="sologan-container">
+        <div className="slogan-container">
           <div className="slogan-heading">Bảo vệ nội dung của bạn</div>
           <div className="slogan-description">Nhận thông báo khi nội dung của bạn bị sao chép.</div>
         </div>
