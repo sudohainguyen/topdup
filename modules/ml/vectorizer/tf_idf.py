@@ -30,10 +30,11 @@ class TfidfDocVectorizer(DocVectorizerBase):
         """Fit `train_documents` into the tf-idf and return tfidf vectorizer.
 
         Args:
-            train_documents (list): List of training documents for vectorizer. Defaults to None.
+            train_documents (list): List of training documents for vectorizer.
+                Defaults to None.
 
         Returns:
-            Tf idf vectorizer what is trained.
+            Tf-IDF vectorizers trained from given docs.
         """
 
         vectorizer = self.vectorizer.fit(train_documents)
@@ -74,14 +75,15 @@ class TfidfDocVectorizer(DocVectorizerBase):
 
         return transform_vectors
 
-    def transform_document_objects(self, documents):
-        """[summary]
+    def transform_document_objects(self, documents: List[Document]) -> np.ndarray:
+        """
+        Transform given list of Document object
 
         Args:
-            documents ([type]): [description]
+            documents (List[Document])
 
         Returns:
-            [type]: [description]
+            np.ndarray: Embeddings
         """
 
         document_text = [document.text for document in documents]
@@ -111,6 +113,5 @@ class TfidfDocVectorizer(DocVectorizerBase):
         # with open(model_path, "rb") as f:
         #     tfidf_vectorizer = pickle.load(f)
         tfidf_vectorizer = pickle.load(open(model_path, "rb"))
-        print(type(tfidf_vectorizer))
 
         return tfidf_vectorizer

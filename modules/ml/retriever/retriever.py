@@ -20,10 +20,12 @@ class Retriever:
         """Init an instance of a Retriever
 
         Args:
-            document_store (FAISSDocumentStore): An instance of DocumentStore (FAISSDocumentStore)
-                                                 to where data is indexed and stored. Defaults to None.
-            candidate_vectorizer (DocVectorizerBase): An instance of vectorizer to convert
-                                                 QUERY documents (in database) to embedding. Defaults to None.
+            document_store (FAISSDocumentStore):
+                An instance of DocumentStore where data is indexed and stored.
+                Defaults to None.
+            candidate_vectorizer (DocVectorizerBase):
+                An instance of vectorizer to convert QUERY documents (in database) to embedding.
+                Defaults to None.
             retriever_vectorizer (DocVectorizerBase): An instance of vectorizer to convert
                                                  CANDIDATE documents to embeddings. Defaults to None.
         """
@@ -143,7 +145,9 @@ class Retriever:
     def update_embeddings(
         self, retrain: bool = True, save_path: str = None, sql_url: str = None
     ):
-        """Update embeddings of documents with candidate vectorizer to `document_store`."""
+        """
+        Update embeddings of documents with candidate vectorizer to `document_store`.
+        """
         if retrain:
             if not self.candidate_vectorizer.is_trained:
                 raise ValueError(
@@ -161,12 +165,13 @@ class Retriever:
 
     def get_candidates(
         self, query_docs: List[str], top_k: int = 10, index: str = None, filters=None
-    ):
+    ) -> Tuple:
         """First phase of retriever to get top_k candidates
 
         Args:
             query_docs (List[str]): The documents to query. Defaults to None.
-            top_k (int, optional): How many document to return for each query_doc. Defaults to 10.
+            top_k (int, optional): Number of documents to return for each query_doc.
+                Defaults to 10.
 
         Returns:
             tuple: Return a tuple of score_matrix and vector_id_matrix (top_k)
@@ -224,8 +229,9 @@ class Retriever:
         process_query_docs: bool = False,
         index: str = None,
         filters=None,
-    ):
-        """[summary]
+    ) -> List[Dict[str, Any]]:
+        """
+        Retrieve batch of most k similar docs to given batch of documents
 
         Args:
             query_docs ([type]): [description]
@@ -235,7 +241,7 @@ class Retriever:
             filters ([type], optional): [description]. Defaults to None.
 
         Returns:
-            [type]: [description]
+            List[Dict[str, Any]]: Retrieved results
         """
         if not self.document_store.is_synchronized():
             raise ValueError(

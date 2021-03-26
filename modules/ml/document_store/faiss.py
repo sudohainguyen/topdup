@@ -241,24 +241,22 @@ class FAISSDocumentStore(SQLDocumentStore):
             print("update")
 
     def is_synchronized(self) -> bool:
-        """[summary]
-
-        Raises:
-            ValueError: [description]
         """
-        if self.faiss_index.ntotal != self.get_document_count():
-            return False
-        return True
+        Check if faiss embeddings covered all documents
+        """
+        return self.faiss_index.ntotal == self.get_document_count()
 
     def get_all_documents(
-        self, index: Optional[str] = None, return_embedding: Optional[bool] = None
+        self, index: Optional[str] = None, return_embedding: Optional[bool] = False
     ) -> List[Document]:
-        """
-        Get documents from the document store.
+        """Get documents from the document store.
 
-        :param index: Name of the index to get the documents from. If None, the
-                      DocumentStore's default index (self.index) will be used.
-        :param return_embedding: Whether to return the document embeddings.
+        Args:
+            index (str, optional): Name of the index to get the documents from. Defaults to self.index.
+            return_embedding (bool, optional): Whether to return the document embeddings.. Defaults to False.
+
+        Returns:
+            List[Document]
         """
         documents = super(FAISSDocumentStore, self).get_all_documents(index=index)
         if return_embedding is None:
