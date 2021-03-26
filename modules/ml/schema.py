@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 from uuid import uuid4
 
 import numpy as np
@@ -11,7 +11,7 @@ class Document:
         id: Optional[str] = None,
         score: Optional[float] = None,
         meta: Dict[str, Any] = None,
-        embedding: Optional[np.array] = None,
+        embedding: Optional[np.array] = None,  # type: ignore
         vector_id: str = None,
     ):
         """

@@ -1,19 +1,22 @@
 import pickle
-from ast import dump
+from typing import List
 
 import numpy as np
-from numpy.lib.function_base import vectorize
 from sklearn.feature_extraction.text import TfidfVectorizer
 
+from modules.ml.schema import Document
 from modules.ml.vectorizer.base import DocVectorizerBase
 
 
 class TfidfDocVectorizer(DocVectorizerBase):
     def __init__(self, vector_dim: int = 128, **kwargs):
-        """Vectorize the documents and return a vector that has been embedding for indexer or comparison.
+        """
+        Vectorize the documents and return a vector that has been embedding
+        for indexer or comparison.
 
         Args:
-            vector_dim (int): Number dimentions of embedding vectors for 1st phase. Defaults to 128.
+            vector_dim (int): Number dimentions of embedding vectors for 1st phase.
+                              Defaults to 128.
             **kwargs: Arbitrary keyword arguments.
         """
 
@@ -23,7 +26,7 @@ class TfidfDocVectorizer(DocVectorizerBase):
         self.is_trained = False
         self.vector_dim = vector_dim
 
-    def fit(self, train_documents: list = None):
+    def fit(self, train_documents: list = None) -> TfidfVectorizer:
         """Fit `train_documents` into the tf-idf and return tfidf vectorizer.
 
         Args:

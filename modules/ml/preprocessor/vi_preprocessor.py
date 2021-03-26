@@ -12,8 +12,6 @@ from modules.ml.plugins.vncorenlp import VnCoreNLPSingleton
 from .base import BasePreProcessor
 from .cleaning import normalize_text
 
-nltk.download("punkt")
-
 logger = logging.getLogger(__name__)
 
 
@@ -29,6 +27,7 @@ class ViPreProcessor(BasePreProcessor):
         """
         :param use_fixed_stopwords: remove stopwords that appears in pre-defined files
         """
+        nltk.download("punkt")
         self.rdrsegmenter = VnCoreNLPSingleton.get_instance()
 
         self.use_fixed_stopwords = use_fixed_stopwords
@@ -37,12 +36,13 @@ class ViPreProcessor(BasePreProcessor):
         self.split_overlap = split_overlap
         self.split_respect_sentence_boundary = split_respect_sentence_boundary
 
-        self.stopwords = None
+        self.stopwords: List[str]
         if use_fixed_stopwords:
             self._load_stopwords()
 
     def clean(self, document: Dict[str, Any]) -> Dict[str, Any]:
-        """Perform document cleaning on a single document and return a single document.
+        """
+        Perform document cleaning on a single document and return a single document.
         Includes dealing with whitespaces, empty lines.
         """
         text = document["text"]
