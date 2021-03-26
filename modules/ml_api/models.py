@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel
 
@@ -14,4 +14,4 @@ class CompareEntry(BaseModel):
 
 class QueryResult(BaseModel):
     message: str
-    results: dict = None
+    results: Optional[Dict] = None

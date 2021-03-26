@@ -1,6 +1,6 @@
-import datetime
 import itertools
 import logging
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 from uuid import uuid4
 
@@ -155,9 +155,9 @@ class SQLDocumentStore(BaseDocumentStore):
             meta = self.session.query(MetaORM)
         else:
             if not from_time:
-                from_time = datetime.datetime(1970, 1, 1)
+                from_time = datetime(1970, 1, 1)
             if not to_time:
-                to_time = datetime.datetime.now()
+                to_time = datetime.now()
             meta = self.session.query(MetaORM).filter(
                 MetaORM.updated > from_time, MetaORM.updated <= to_time
             )
@@ -400,16 +400,23 @@ class SQLDocumentStore(BaseDocumentStore):
         to_time: datetime = None,
         index: Optional[str] = None,
     ) -> List[str]:
-        """
-        Return the list of document ids in the DocumentStore.
+        """Return list of document ids in the DocumentStore.
+
+        Args:
+            from_time (datetime, optional). Defaults to None.
+            to_time (datetime, optional). Defaults to None.
+            index (str, optional): Specify an index name if needed. Defaults to None.
+
+        Returns:
+            List[str]: List of document ids only
         """
         if not from_time and not to_time:  # get all
             query = self.session.query(DocumentORM.id).filter_by(index=index)
         else:
             if not from_time:
-                from_time = datetime.datetime(1970, 1, 1)
+                from_time = datetime(1970, 1, 1)
             if not to_time:
-                to_time = datetime.datetime.now()
+                to_time = datetime.now()
             query = self.session.query(
                 DocumentORM.id, DocumentORM.index, DocumentORM.updated
             ).filter(

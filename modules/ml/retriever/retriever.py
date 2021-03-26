@@ -1,7 +1,6 @@
 import logging
-from typing import List
+from typing import Any, Dict, List, Tuple
 
-import numpy as np
 from tqdm import tqdm
 
 from modules.ml.document_store.faiss import FAISSDocumentStore
@@ -21,17 +20,19 @@ class Retriever:
         """Init an instance of a Retriever
 
         Args:
-            document_store (FAISSDocumentStore): An instance of DocumentStore (FAISSDocumentStore)
-                                                 to where data is indexed and stored. Defaults to None.
-            candidate_vectorizer (DocVectorizerBase): An instance of vectorizer to convert
-                                                 QUERY documents (in database) to embedding. Defaults to None.
+            document_store (FAISSDocumentStore):
+                An instance of DocumentStore where data is indexed and stored.
+                Defaults to None.
+            candidate_vectorizer (DocVectorizerBase):
+                An instance of vectorizer to convert QUERY documents (in database) to embedding.
+                Defaults to None.
             retriever_vectorizer (DocVectorizerBase): An instance of vectorizer to convert
                                                  CANDIDATE documents to embeddings. Defaults to None.
         """
 
-        self.document_store = document_store
-        self.candidate_vectorizer = candidate_vectorizer
-        self.retriever_vectorizer = retriever_vectorizer
+        self.document_store: FAISSDocumentStore = document_store
+        self.candidate_vectorizer: DocVectorizerBase = candidate_vectorizer
+        self.retriever_vectorizer: DocVectorizerBase = retriever_vectorizer
 
         if not self.document_store:
             raise ValueError(
@@ -144,7 +145,9 @@ class Retriever:
     def update_embeddings(
         self, retrain: bool = True, save_path: str = None, sql_url: str = None
     ):
-        """Update embeddings of documents with candidate vectorizer to `document_store`."""
+        """
+        Update embeddings of documents with candidate vectorizer to `document_store`.
+        """
         if retrain:
             if not self.candidate_vectorizer.is_trained:
                 raise ValueError(
@@ -162,12 +165,13 @@ class Retriever:
 
     def get_candidates(
         self, query_docs: List[str], top_k: int = 10, index: str = None, filters=None
-    ):
+    ) -> Tuple:
         """First phase of retriever to get top_k candidates
 
         Args:
             query_docs (List[str]): The documents to query. Defaults to None.
-            top_k (int, optional): How many document to return for each query_doc. Defaults to 10.
+            top_k (int, optional): Number of documents to return for each query_doc.
+                Defaults to 10.
 
         Returns:
             tuple: Return a tuple of score_matrix and vector_id_matrix (top_k)
@@ -213,31 +217,31 @@ class Retriever:
         scores = candidate_embs.dot(query_emb.T)
         idx_scores = [(idx, score) for idx, score in enumerate(scores)]
 
-        highest_score = sorted(idx_scores, key=(lambda tup: tup[1]), reverse=True)[
-            1
-        ]  # 0 location is the query_doc itself
+        # 0 location is the query_doc itself, so pick the next one
+        highest_score = sorted(idx_scores, key=(lambda tup: tup[1]), reverse=True)[1]
 
         return candidate_docs_id[highest_score[0]], highest_score[1]
 
     def batch_retrieve(
         self,
-        query_docs,
-        top_k_candidates=10,
-        processe_query_docs=False,
-        index=None,
+        query_docs: List[str],
+        top_k_candidates: int = 10,
+        process_query_docs: bool = False,
+        index: str = None,
         filters=None,
-    ):
-        """[summary]
+    ) -> List[Dict[str, Any]]:
+        """
+        Retrieve batch of most k similar docs to given batch of documents
 
         Args:
             query_docs ([type]): [description]
             top_k_candidates (int, optional): [description]. Defaults to 10.
-            processe_query_docs (bool, optional): [description]. Defaults to False.
+            process_query_docs (bool, optional): [description]. Defaults to False.
             index ([type], optional): [description]. Defaults to None.
             filters ([type], optional): [description]. Defaults to None.
 
         Returns:
-            [type]: [description]
+            List[Dict[str, Any]]: Retrieved results
         """
         if not self.document_store.is_synchronized():
             raise ValueError(
@@ -245,7 +249,7 @@ class Retriever:
                 " Please, call update_embeddings methods first!"
             )
 
-        if processe_query_docs:
+        if process_query_docs:
             processor = ViPreProcessor()
             query_docs = [
                 processor.clean({"text": query_doc})["text"] for query_doc in query_docs
@@ -275,84 +279,5 @@ class Retriever:
                     "similarity_score": round(score[0], 5),
                 }
             )
-
-        return retrieve_results
-
-    def sequential_retrieve(
-        self,
-        query_docs,
-        meta_docs=None,
-        top_k_candidates=10,
-        processe_query_docs=True,
-        index=None,
-        filters=None,
-    ):
-        """[summary]
-
-        Args:
-            query_docs ([type]): [description]
-            meta_docs ([type]): [description]
-            top_k_candidates (int, optional): [description]. Defaults to 10.
-            processe_query_docs (bool, optional): [description]. Defaults to True.
-            index ([type], optional): [description]. Defaults to None.
-            filters ([type], optional): [description]. Defaults to None.
-
-        Returns:
-            [type]: [description]
-        """
-        if not self.document_store.is_synchronized():
-            raise ValueError(
-                "Faiss_index and database haven't been synchronized yet."
-                " Please, call update_embeddings methods first!"
-            )
-
-        retrieve_results = []
-        for idx, query_doc in enumerate(
-            tqdm(query_docs, desc="Sequential retrieving.....  ")
-        ):
-
-            if processe_query_docs:
-                processor = ViPreProcessor()
-                doc = processor.clean({"text": query_doc})
-            else:
-                doc = {"text": query_doc}
-
-            query_emb, _, candidate_id_matrix = self.get_candidates(
-                query_docs=[doc["text"]],
-                top_k=top_k_candidates,
-                index=index,
-                filters=filters,
-            )
-            candidate_ids = [
-                candidate_id
-                for candidate_id in candidate_id_matrix[0]
-                if candidate_id >= 0
-            ]
-
-            retrieve_result, score = self._calc_scores_for_candidates(
-                query_doc=query_doc, candidate_ids=candidate_ids
-            )
-            retrieve_results.append(
-                {
-                    "query_doc": query_doc,
-                    "retrieve_result": retrieve_result,
-                    "similarity_score": round(score[0], 5),
-                }
-            )
-
-            doc["embedding"] = query_emb[0]
-
-            if meta_docs and idx < len(meta_docs):
-                meta = meta_docs[idx]
-            else:
-                meta = {}
-
-            for m in meta.keys():
-                if isinstance(meta[m], list):
-                    meta[m] = "|".join(meta[m])
-
-            doc["meta"] = meta
-
-            self.document_store.write_documents([doc])
 
         return retrieve_results
