@@ -6,6 +6,8 @@ import { ToastService } from "../../shared/toast.service"
 import "./dup-compare.css"
 import DupCompareService from "./dup-compare.service"
 
+const queryString = require('query-string')
+
 const Mode = {
   Text: 'text',
   Url: 'url'
@@ -13,27 +15,35 @@ const Mode = {
 
 const DupCompare = (props) => {
   const routeInfo = useLocation()
-  const passedState = routeInfo.state || {}
-  const { urlA, urlB } = passedState
-  const defaultModeA = urlA ? Mode.Url : Mode.Text
-  const defaultModeB = urlB ? Mode.Url : Mode.Text
+  const searchStr = routeInfo.search || ''
+  const queryParam = queryString.parse(searchStr) || {}
+  const _sourceUrl = queryParam.sourceUrl || ''
+  const _targetUrl = queryParam.targetUrl || ''
+  const _sourceText = queryParam.sourceText || ''
+  const _targetText = queryParam.targetText || ''
+
+  const defaultModeA = _sourceUrl ? Mode.Url : Mode.Text
+  const defaultModeB = _targetUrl ? Mode.Url : Mode.Text
   const [sourceMode, setSourceMode] = useState(defaultModeA)
   const [targetMode, setTargetMode] = useState(defaultModeB)
-  const [sourceText, setSourceText] = useState('')
-  const [targetText, setTargetText] = useState('')
-  const [sourceUrl, setSourceUrl] = useState(urlA)
-  const [targetUrl, setTargetUrl] = useState(urlB)
+  
+  const [sourceUrl, setSourceUrl] = useState(_sourceUrl)
+  const [targetUrl, setTargetUrl] = useState(_targetUrl)  
+  const [sourceText, setSourceText] = useState(_sourceText)
+  const [targetText, setTargetText] = useState(_targetText)
+
   const [sourceSegements, setSourceSegments] = useState([])
   const [targetSegements, setTargetSegments] = useState([])
   const [resultPairs, setResultPairs] = useState([])
   const [compareResult, setCompareResult] = useState({})
+
   const [loading, setLoading] = useState(false)
 
   const toastService = new ToastService()
   const simCheckService = new DupCompareService()
 
   useEffect(() => {
-    if (urlA && urlB) {
+    if ((_sourceUrl || _sourceText) && (_targetUrl || _targetText)) {
       checkSimilarity()
     }
   }, [])

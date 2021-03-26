@@ -17,6 +17,7 @@
     "formik": "^2.2.6",
     "jquery": "^3.6.0",
     "moment": "^2.29.1",
+    "query-string": "^7.0.0",
     "react": "^17.0.1",
     "react-bootstrap": "^1.4.3",
     "react-bootstrap-daterangepicker": "^7.0.0",
