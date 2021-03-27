@@ -25,7 +25,7 @@ class ViPreProcessor(BasePreProcessor):
         split_respect_sentence_boundary: Optional[bool] = True,
     ):
         """
-        Args:
+        Attributes:
             use_fixed_stopwords (bool, optional): remove stopwords that appears in pre-defined files.
                                                   Defaults to False.
             split_by (str, optional): Unit for splitting the document. Can be "word", "sentence", or "passage".
@@ -57,8 +57,7 @@ class ViPreProcessor(BasePreProcessor):
             self._load_stopwords()
 
     def clean(self, document: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Perform document cleaning on a single document and return a single document.
+        """Performs document cleaning on a single document and return a single document.
         Includes dealing with whitespaces, empty lines.
         """
         text = document["text"]
@@ -162,8 +161,7 @@ class ViPreProcessor(BasePreProcessor):
         return documents
 
     def _word_segment(self, text: str) -> str:
-        """
-        Use VnCoreNLP-based tokenizer for word segmentation
+        """Uses VnCoreNLP-based tokenizer for word segmentation.
         """
         sentences = self.rdrsegmenter.tokenize(text)
 
@@ -179,8 +177,8 @@ class ViPreProcessor(BasePreProcessor):
     def _load_stopwords(
         self, stopword_path: str = "modules/ml/data/vietnamese-stopwords.txt"
     ):
-        """
-        Load list of stopwords from given path
+        """Loads list of stopwords from given path.
+
         ref: https://github.com/stopwords/vietnamese-stopwords/
         """
         if not os.path.isfile(stopword_path):
@@ -195,8 +193,8 @@ class ViPreProcessor(BasePreProcessor):
 
 
 def _clean_vncore_result(text: str) -> str:
-    """
-    Clean special cases caused by VnCoreNLP
+    """Cleans special cases caused by VnCoreNLP.
+
     Example: "cho đến thời_điểm này , có_thể nói ,"
     """
     text = re.sub(r"\s([?.!,](?:\s|$))", r"\1", text)
