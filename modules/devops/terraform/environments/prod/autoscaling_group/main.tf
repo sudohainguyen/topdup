@@ -47,7 +47,6 @@ locals {
   userdata = <<-USERDATA
     #!/bin/bash
     nvm use 10
-    sudo env PATH=$PATH:/home/ubuntu/.nvm/versions/node/v10.24.0/bin /home/ubuntu/.nvm/versions/node/v10.24.0/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
-    sudo systemctl start pm2-ubuntu
+    pm2 reload /home/ubuntu/backend.config.js
   USERDATA
 }
