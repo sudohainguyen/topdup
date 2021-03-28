@@ -69,21 +69,25 @@ class SQLDocumentStore(BaseDocumentStore):
 
         Attributes:
             url (str): URL for SQL database as expected by SQLAlchemy.
-                       Defaults to "postgresql+psycopg2://".
-                       More info here: https://docs.sqlalchemy.org/en/13/core/engines.html#database-urls.
-            index (str, optional): The documents are scoped to an index attribute that can be used when writing, querying, or deleting documents.
-                                   Defaults to "document".
-            label_index (str, optional): The default value of index attribute for the labels. Defaults to "label".
-            update_existing_documents (bool, optional): Whether to update any existing documents with the same ID when adding
-                                                        documents. When set as True, any document with an existing ID gets updated.
-                                                        If set to False, an error is raised if the document ID of the document being
-                                                        added already exists. Using this parameter could cause performance degradation
-                                                        for document insertion. Defaults to False.
-            batch_size (int, optional): Maximum number of variable parameters and rows fetched in a single SQL statement,
-                                        to help in excessive memory allocations. In most methods of the DocumentStore this means number of documents fetched in one query.
-                                        Tune this value based on host machine main memory.
-                                        For SQLite versions prior to v3.32.0 keep this value less than 1000.
-                                        More info refer: https://www.sqlite.org/limits.html. Defaults to 1000.
+                Defaults to "postgresql+psycopg2://".
+                More info here: https://docs.sqlalchemy.org/en/13/core/engines.html#database-urls.
+            index (str, optional): The documents are scoped to an index attribute that
+                can be used when writing, querying, or deleting documents.
+                Defaults to "document".
+            label_index (str, optional): The default value of index attribute for the labels.
+                Defaults to "label".
+            update_existing_documents (bool, optional): Whether to update any existing
+                documents with the same ID when adding documents.
+                When set as True, any document with an existing ID gets updated.
+                If set to False, an error is raised if the document ID of the document
+                being added already exists. Using this parameter could cause
+                performance degradation for document insertion. Defaults to False.
+            batch_size (int, optional): Maximum number of variable parameters and rows
+                fetched in a single SQL statement, to help in excessive memory allocations.
+                In most methods of the DocumentStore this means number of documents fetched in one query.
+                Tune this value based on host machine main memory.
+                For SQLite versions prior to v3.32.0 keep this value less than 1000.
+                More info refer: https://www.sqlite.org/limits.html. Defaults to 1000.
         """
         engine = create_engine(url)
         self.engine = engine
@@ -213,13 +217,15 @@ class SQLDocumentStore(BaseDocumentStore):
         """Gets all documents from the DocumentStore.
 
         Args:
-            index (str, optional): Name of the index to get the documents from. If None, the
-                                   DocumentStore's default index (self.index) will be used.
-                                   Defaults to None.
-            filters (Dict[str, List[str]], optional): Optional filters to narrow down the documents to return.
-                                                      Example: {"name": ["some", "more"], "category": ["only_one"]}.
-                                                      Defaults to None.
-            return_embedding (bool, optional): Whether to return the document embeddings.. Defaults to None.
+            index (str, optional): Name of the index to get the documents from. If None,
+                DocumentStore's default index (self.index) will be used.
+                Defaults to None.
+            filters (Dict[str, List[str]], optional): Optional filters to narrow down
+                the documents to return.
+                Example: {"name": ["some", "more"], "category": ["only_one"]}.
+                Defaults to None.
+            return_embedding (bool, optional): Whether to return the document embeddings.
+                Defaults to None.
 
         Returns:
             List[Document]
@@ -273,13 +279,16 @@ class SQLDocumentStore(BaseDocumentStore):
         """Indexes documents for later queries.
 
         Args:
-            documents (Union[List[dict], List[Document]]): a list of Python dictionaries or a list of Haystack Document objects.
-                                                           For documents as dictionaries, the format is {"text": "<the-actual-text>"}.
-                                                           Optionally: Include meta data via {"text": "<the-actual-text>",
-                                                           "meta":{"name": "<some-document-name>, "author": "somebody", ...}}
-                                                           It can be used for filtering and is accessible in the responses of the Finder.
-            index (Optional[str], optional): add an optional index attribute to documents. It can be later used for filtering. For instance,
-                                             documents for evaluation can be indexed in a separate index than the documents for search. Defaults to None.
+            documents (Union[List[dict], List[Document]]): a list of Python dictionaries
+                or a list of Haystack Document objects.
+                For documents as dictionaries, the format is {"text": "<the-actual-text>"}.
+                Optionally: Include meta data via {"text": "<the-actual-text>",
+                "meta":{"name": "<some-document-name>, "author": "somebody", ...}}
+                It can be used for filtering and is accessible in the responses of the Finder.
+            index (Optional[str], optional): add an optional index attribute to documents.
+                It can be later used for filtering.
+                For instance, documents for evaluation can be indexed in a separate
+                index than the documents for search. Defaults to None.
 
         Raises:
             Exception: raised when session can not commit.
@@ -466,9 +475,10 @@ class SQLDocumentStore(BaseDocumentStore):
         """Deletes documents in an index. All documents are deleted if no filters are passed.
 
         Args:
-            index (str, optional): Index name to delete the document from. Defaults to None.
-            filters (Dict[str, List[str]], optional): Optional filters to narrow down the documents to be deleted.
-                                                      Defaults to None.
+            index (str, optional): Index name to delete the document from.
+                Defaults to None.
+            filters (Dict[str, List[str]], optional): Optional filters to narrow down
+                the documents to be deleted. Defaults to None.
 
         Raises:
             NotImplementedError: Delete by filters is not implemented for SQLDocumentStore.

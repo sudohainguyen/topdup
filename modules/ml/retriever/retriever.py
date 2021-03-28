@@ -20,12 +20,12 @@ class Retriever:
         """Inits an instance of a Retriever.
 
         Attributes:
-            document_store (FAISSDocumentStore, optional): An instance of DocumentStore where data is indexed and stored.
-                                                           Defaults to None.
-            candidate_vectorizer (DocVectorizerBase, optional): An instance of vectorizer to convert QUERY documents (in database) to embedding.
-                                                                Defaults to None.
-            retriever_vectorizer (DocVectorizerBase, optional): An instance of vectorizer to convert
-                                                      CANDIDATE documents to embeddings. Defaults to None.
+            document_store (FAISSDocumentStore, optional): An instance of DocumentStore
+                where data is indexed and stored. Defaults to None.
+            candidate_vectorizer (DocVectorizerBase, optional): An instance of vectorizer
+                to convert QUERY documents (in database) to embedding. Defaults to None.
+            retriever_vectorizer (DocVectorizerBase, optional): An instance of vectorizer
+                to convert CANDIDATE documents to embeddings. Defaults to None.
         """
 
         self.document_store: FAISSDocumentStore = document_store
