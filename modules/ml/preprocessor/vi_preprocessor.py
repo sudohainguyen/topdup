@@ -18,30 +18,32 @@ logger = logging.getLogger(__name__)
 class ViPreProcessor(BasePreProcessor):
     def __init__(
         self,
-        use_fixed_stopwords: Optional[bool] = False,
         split_by: Optional[str] = "word",
         split_length: Optional[int] = 1000,
         split_overlap: Optional[int] = None,
         split_respect_sentence_boundary: Optional[bool] = True,
+        use_fixed_stopwords: Optional[bool] = False,
     ):
         """
         Attributes:
-            use_fixed_stopwords (bool, optional): remove stopwords that appears in pre-defined files.
-                                                  Defaults to False.
-            split_by (str, optional): Unit for splitting the document. Can be "word", "sentence", or "passage".
-                                      Set `None` to disable spliting. Defaults to "word".
-            split_length (int, optional): Max. number of the above split unit (e.g. words) that are allowed in one document.
-                                          Defaults to 1000.
+            split_by (str, optional): Unit for splitting the document.
+                Can be "word", "sentence", or "passage".
+                Set `None` to disable spliting. Defaults to "word".
+            split_length (int, optional): Max. number of the above split unit (e.g. words)
+                that are allowed in one document. Defaults to 1000.
             split_overlap (int, optional): Word overlap between two adjacent documents after a split.
-                              Setting this to a positive number essentially enables the sliding window approach.
-                              For example, if split_by -> `word`,
-                              split_length -> 5 & split_overlap -> 2, then the splits would be like:
-                              [w1 w2 w3 w4 w5, w4 w5 w6 w7 w8, w7 w8 w10 w11 w12].
-                              Set the value to None to ensure there is no overlap among the documents after splitting.
-                              Defaults to None.
-            split_respect_sentence_boundary (bool, optional): Whether to split in partial sentences if split_by -> `word`. If set
-                                                              to True, the individual split will always have complete sentences &
-                                                              the number of words will be <= split_length.. Defaults to True.
+                Setting this to a positive number essentially enables the sliding window approach.
+                For example, if split_by -> `word`,
+                split_length -> 5 & split_overlap -> 2, then the splits would be like:
+                [w1 w2 w3 w4 w5, w4 w5 w6 w7 w8, w7 w8 w10 w11 w12].
+                Set the value to None to ensure there is no overlap among the documents after splitting.
+                Defaults to None.
+            split_respect_sentence_boundary (bool, optional): Whether to split in
+                partial sentences if split_by -> `word`.
+                If set to True, the individual split will always have complete sentences &
+                the number of words will be <= split_length.. Defaults to True.
+            use_fixed_stopwords (bool, optional): remove stopwords that appears in pre-defined files.
+                Defaults to False.
         """
         nltk.download("punkt")
         self.rdrsegmenter = VnCoreNLPSingleton.get_instance()
